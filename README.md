@@ -34,8 +34,6 @@ Aquí es donde puedes listar a los miembros de la empresa y su rol:
 - **[Nombre del Integrante]** - Desarrollador Frontend
 - **[Nombre del Integrante]** - Especialista en IA
 
-_(Puedes actualizar esta sección con los nombres de los integrantes)_
-
 ## 📫 Contáctanos
 
 Si deseas conocer más sobre nosotros o trabajar con AETHER_TECH, puedes contactarnos a través de:
