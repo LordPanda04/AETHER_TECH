@@ -28,8 +28,8 @@ Ser líderes en la industria tecnológica, reconocidos por nuestra capacidad de 
 
 Aquí es donde puedes listar a los miembros de la empresa y su rol:
 
-- **[Nombre del Fundador]** - Fundador y CEO
-- **[Nombre del Integrante]** - CTO
+- **Rodrigo Davalos** - Fundador y CEO
+- **Leonardo Panta** - CTO
 - **[Nombre del Integrante]** - Desarrollador Backend
 - **[Nombre del Integrante]** - Desarrollador Frontend
 - **[Nombre del Integrante]** - Especialista en IA
