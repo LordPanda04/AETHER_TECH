@@ -30,7 +30,7 @@ Aquí es donde puedes listar a los miembros de la empresa y su rol:
 
 - **Rodrigo Davalos** - Fundador y CEO
 - **Leonardo Panta** - CTO
-- **[Nombre del Integrante]** - Desarrollador Backend
+- **Alexander Villanueva** - Desarrollador Backend
 - **Jose Limachi** - Desarrollador Frontend
 - **[Nombre del Integrante]** - Especialista en IA
 
