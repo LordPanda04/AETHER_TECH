@@ -28,11 +28,11 @@ Ser líderes en la industria tecnológica, reconocidos por nuestra capacidad de 
 
 Aquí es donde puedes listar a los miembros de la empresa y su rol:
 
-- **Rodrigo Davalos** - Fundador y CEO
-- **Leonardo Panta** - CTO
+- **Leonardo Panta** - Jefe de Proyecto
+- **Rodrigo Davalos** - Arquitecto de Software
 - **Alexander Villanueva** - Desarrollador Backend
 - **Jose Limachi** - Desarrollador Frontend
-- **[Nombre del Integrante]** - Especialista en IA
+- **Gabriel Uscamayta** - Diseñador y Tester
 
 ## 📫 Contáctanos
 
