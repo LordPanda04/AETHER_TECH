@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "request": "launch",
+            "name": "Launch Current File",
+            "mainClass": "${file}",
+            "projectName": ""
+        },
+        {
+            "type": "java",
+            "request": "launch",
+            "name": "Launch Main",
+            "mainClass": "Main",
+            "projectName": ""
+        }
+    ]
+}
