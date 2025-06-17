@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import productsData from './productsData';
 import './Menu.css';
-import metroLogo from '../images/METRO.png';
-
-const API_URL = 'http://localhost:3001/api'; // Ajusta según tu configuración
+import metroLogo from '../images/METRO.png'; 
 
 const Menu = () => {
   const navigate = useNavigate();
@@ -25,161 +23,81 @@ const Menu = () => {
   const [newProduct, setNewProduct] = useState({
     nombre: '',
     lote: '',
-    fvencimiento: null,
-    categoria_id: 1,
+    fvencimiento: '---',
+    tipodeguardado: '',
     cantidad: 0
   });
-  const [categorias, setCategorias] = useState([]);
 
-  // Cargar productos y categorías al iniciar
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [prodResponse, catResponse] = await Promise.all([
-          axios.get(`${API_URL}/productos`),
-          axios.get(`${API_URL}/categorias`)
-        ]);
-        
-        const productosAdaptados = prodResponse.data.map(producto => ({
-          ...producto,
-          id: producto.producto_id,
-          codigo: producto.codigo_barras,
-          tipodeguardado: producto.categoria_nombre || 'General',
-          fvencimiento: producto.fvencimiento || '---'
-        }));
-        
-        setProducts(productosAdaptados);
-        setFilteredProducts(productosAdaptados);
-        setCategorias(catResponse.data);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error cargando datos:', error);
-        setIsLoading(false);
-      }
-    };
-    
-    fetchData();
+    setProducts(productsData);
+    setFilteredProducts(productsData);
+    setIsLoading(false);
   }, []);
 
   // Generar código consecutivo basado en el último producto
   const generateConsecutiveCode = () => {
     if (products.length === 0) return 'PROD-001';
+    
     const lastCode = products[products.length - 1].codigo;
     const number = parseInt(lastCode.split('-')[1]) + 1;
     return `PROD-${number.toString().padStart(3, '0')}`;
   };
 
-  // Filtrar productos
   useEffect(() => {
     const results = products.filter(product =>
       product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.lote && product.lote.toLowerCase().includes(searchTerm.toLowerCase()))
+      product.lote.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredProducts(results);
   }, [searchTerm, products]);
 
-  // Manejar eliminación de producto
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`${API_URL}/productos/${id}`);
-      const updatedProducts = products.filter(product => product.id !== id);
-      setProducts(updatedProducts);
-      setFilteredProducts(updatedProducts);
-      setSelectedProductId(null);
-      setShowDeleteModal(false);
-      alert('Producto eliminado correctamente');
-    } catch (error) {
-      console.error('Error eliminando producto:', error);
-      alert('Error al eliminar el producto');
-    }
+  const handleDelete = (id) => {
+    const updatedProducts = products.filter(product => product.id !== id);
+    setProducts(updatedProducts);
+    setFilteredProducts(updatedProducts);
+    setSelectedProductId(null);
+    setShowDeleteModal(false);
+    alert(`Producto eliminado correctamente`);
   };
 
-  // Manejar reabastecimiento
-  const handleRestock = async (id, quantity) => {
-    try {
-      await axios.put(`${API_URL}/inventario/${id}`, { cantidad: quantity });
-      
-      const updatedProducts = products.map(product => 
-        product.id === id ? { 
-          ...product, 
-          cantidad: product.cantidad + quantity 
-        } : product
-      );
-      
-      setProducts(updatedProducts);
-      setFilteredProducts(updatedProducts);
-      setSelectedProductId(null);
-      setShowRestockModal(false);
-      
-      alert(`Producto reabastecido. Nueva cantidad: ${
-        updatedProducts.find(p => p.id === id).cantidad
-      }`);
-    } catch (error) {
-      console.error('Error reabasteciendo:', error);
-      alert('Error al reabastecer el producto');
-    }
+  const handleRestock = (id, quantity) => {
+    const updatedProducts = products.map(product => 
+      product.id === id ? { ...product, cantidad: product.cantidad + quantity } : product
+    );
+    setProducts(updatedProducts);
+    setFilteredProducts(updatedProducts);
+    setSelectedProductId(null);
+    setShowRestockModal(false);
+    alert(`Producto reabastecido correctamente. Nueva cantidad: ${updatedProducts.find(p => p.id === id).cantidad}`);
   };
 
-  // Agregar nuevo producto
-  const handleAddProduct = async () => {
-    if (!newProduct.nombre || !newProduct.lote || newProduct.cantidad <= 0) {
-      alert('Complete todos los campos obligatorios');
+  const handleAddProduct = () => {
+    if (!newProduct.nombre || !newProduct.lote || !newProduct.tipodeguardado || newProduct.cantidad <= 0) {
+      alert('Por favor complete todos los campos correctamente');
       return;
     }
 
-    try {
-      const productData = {
-        nombre: newProduct.nombre,
-        codigo_barras: generateConsecutiveCode(),
-        categoria_id: newProduct.categoria_id,
-        unidad_medida: 'unidad',
-        precio_compra: 0,
-        precio_venta: 0,
-        stock_minimo: 0,
-        stock_maximo: 100
-      };
+    const consecutiveCode = generateConsecutiveCode();
+    const productToAdd = {
+      id: products.length + 1,
+      codigo: consecutiveCode,
+      ...newProduct,
+      cantidad: parseInt(newProduct.cantidad)
+    };
 
-      // Crear producto
-      const response = await axios.post(`${API_URL}/productos`, productData);
-      
-      // Agregar al inventario
-      await axios.post(`${API_URL}/inventario`, {
-        producto_id: response.data.id,
-        ubicacion_id: 1, // Ubicación por defecto
-        cantidad: newProduct.cantidad,
-        lote: newProduct.lote,
-        fecha_caducidad: newProduct.fvencimiento
-      });
-
-      // Actualizar estado local
-      const productToAdd = {
-        id: response.data.id,
-        codigo: productData.codigo_barras,
-        nombre: newProduct.nombre,
-        lote: newProduct.lote,
-        fvencimiento: newProduct.fvencimiento || '---',
-        tipodeguardado: categorias.find(c => c.categoria_id === newProduct.categoria_id)?.nombre || 'General',
-        cantidad: newProduct.cantidad
-      };
-
-      const updatedProducts = [...products, productToAdd];
-      setProducts(updatedProducts);
-      setFilteredProducts(updatedProducts);
-      setShowAddModal(false);
-      setNewProduct({
-        nombre: '',
-        lote: '',
-        fvencimiento: null,
-        categoria_id: 1,
-        cantidad: 0
-      });
-      
-      alert(`Producto agregado con código: ${productData.codigo_barras}`);
-    } catch (error) {
-      console.error('Error agregando producto:', error);
-      alert('Error al agregar el producto');
-    }
+    const updatedProducts = [...products, productToAdd];
+    setProducts(updatedProducts);
+    setFilteredProducts(updatedProducts);
+    setShowAddModal(false);
+    setNewProduct({
+      nombre: '',
+      lote: '',
+      fvencimiento: '---',
+      tipodeguardado: '',
+      cantidad: 0
+    });
+    alert(`Producto agregado correctamente con código: ${consecutiveCode}`);
   };
 
   const handleLogout = () => {
@@ -341,7 +259,7 @@ const Menu = () => {
                     >
                       <td>{product.codigo}</td>
                       <td>{product.nombre}</td>
-                      <td>{product.lote || 'N/A'}</td>
+                      <td>{product.lote}</td>
                       <td>{product.fvencimiento}</td>
                       <td>{product.tipodeguardado}</td>
                       <td>{product.cantidad}</td>
@@ -370,7 +288,6 @@ const Menu = () => {
                   value={newProduct.nombre}
                   onChange={(e) => setNewProduct({...newProduct, nombre: e.target.value})}
                   placeholder="Nombre del producto"
-                  required
                 />
               </div>
               
@@ -381,32 +298,27 @@ const Menu = () => {
                   value={newProduct.lote}
                   onChange={(e) => setNewProduct({...newProduct, lote: e.target.value})}
                   placeholder="Número de lote"
-                  required
                 />
               </div>
               
               <div className="form-group">
                 <label>Fecha de Vencimiento:</label>
                 <input
-                  type="date"
-                  value={newProduct.fvencimiento || ''}
-                  onChange={(e) => setNewProduct({...newProduct, fvencimiento: e.target.value || null})}
+                  type="text"
+                  value={newProduct.fvencimiento}
+                  onChange={(e) => setNewProduct({...newProduct, fvencimiento: e.target.value})}
+                  placeholder="--- o DD/MM/AAAA"
                 />
               </div>
               
               <div className="form-group">
                 <label>Tipo de Guardado:</label>
-                <select
-                  value={newProduct.categoria_id}
-                  onChange={(e) => setNewProduct({...newProduct, categoria_id: parseInt(e.target.value)})}
-                  required
-                >
-                  {categorias.map(cat => (
-                    <option key={cat.categoria_id} value={cat.categoria_id}>
-                      {cat.nombre}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  value={newProduct.tipodeguardado}
+                  onChange={(e) => setNewProduct({...newProduct, tipodeguardado: e.target.value})}
+                  placeholder="Ej: Refrigerado, Seco, etc."
+                />
               </div>
               
               <div className="form-group">
@@ -415,9 +327,8 @@ const Menu = () => {
                   type="number"
                   min="1"
                   value={newProduct.cantidad}
-                  onChange={(e) => setNewProduct({...newProduct, cantidad: parseInt(e.target.value) || 0})}
+                  onChange={(e) => setNewProduct({...newProduct, cantidad: e.target.value})}
                   placeholder="Cantidad inicial"
-                  required
                 />
               </div>
               
@@ -445,7 +356,7 @@ const Menu = () => {
             <div className="modal-container">
               <h3>Confirmar Eliminación</h3>
               <p>¿Estás seguro que deseas eliminar el producto: <strong>{selectedProduct.nombre}</strong>?</p>
-              <p>Código: {selectedProduct.codigo} | Lote: {selectedProduct.lote || 'N/A'}</p>
+              <p>Código: {selectedProduct.codigo} | Lote: {selectedProduct.lote}</p>
               <div className="modal-buttons">
                 <button 
                   onClick={() => handleDelete(selectedProduct.id)} 
@@ -470,7 +381,7 @@ const Menu = () => {
             <div className="modal-container">
               <h3>Confirmar Reabastecimiento</h3>
               <p>¿Deseas reabastecer el producto: <strong>{selectedProduct.nombre}</strong>?</p>
-              <p>Código: {selectedProduct.codigo} | Lote: {selectedProduct.lote || 'N/A'}</p>
+              <p>Código: {selectedProduct.codigo} | Lote: {selectedProduct.lote}</p>
               <p>Cantidad actual: {selectedProduct.cantidad}</p>
               
               <div className="restock-input-container">
