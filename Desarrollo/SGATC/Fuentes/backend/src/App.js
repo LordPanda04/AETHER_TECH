@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
+import Axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Login from './components/Login';
-import Menu from './components/Menu'; // Asegúrate de crear este componente
 import metroLogo from './images/METRO.png';
 
 const App = () => {
@@ -9,7 +9,6 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/menu" element={<PrivateRoute><Menu /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
@@ -39,7 +38,7 @@ const LoginPage = () => {
       // Guarda el estado de autenticación (puedes usar localStorage para persistencia)
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('currentUser', username);
-      navigate('/menu'); // Redirige al dashboard
+      navigate(''); // Redirige al dashboard
     } else {
       console.log("Credenciales incorrectas");
       setLoginError("Usuario o contraseña incorrectos");
