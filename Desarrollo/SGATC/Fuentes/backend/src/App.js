@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import axios from 'axios'; // Asegúrate de instalarlo: npm install axios
 import Login from './components/Login';
 import Menu from './components/Menu'; // Asegúrate de crear este componente
 import metroLogo from './images/METRO.png';
@@ -21,28 +22,23 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [loginError, setLoginError] = useState('');
 
-  // Base de datos local de usuarios (¡NO seguro para producción!)
-  const validUsers = [
-    { username: "admin", password: "metro123" },
-    { username: "usuario1", password: "clave123" },
-    { username: "ola", password: "123" },
-  ];
+  const handleLogin = async (username, password) => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/login', {
+        username,
+        password,
+      });
 
-  const handleLogin = (username, password) => {
-    // Verifica si el usuario y contraseña coinciden
-    const isValidUser = validUsers.some(
-      (user) => user.username === username && user.password === password
-    );
-
-    if (isValidUser) {
-      console.log("¡Login exitoso!");
-      // Guarda el estado de autenticación (puedes usar localStorage para persistencia)
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('currentUser', username);
-      navigate('/menu'); // Redirige al dashboard
-    } else {
-      console.log("Credenciales incorrectas");
-      setLoginError("Usuario o contraseña incorrectos");
+      if (response.data.success) {
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('currentUser', username);
+        navigate('/menu');
+      } else {
+        setLoginError(response.data.error || 'Credenciales incorrectas');
+      }
+    } catch (error) {
+      setLoginError('Error al conectar con el servidor');
+      console.error('Error:', error);
     }
   };
 
