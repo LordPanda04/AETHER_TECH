@@ -279,7 +279,7 @@ const Menu = () => {
                       <td>{product.nombre_categ}</td> {/* Desde JOIN con categoría */}
                       <td>{product.unid_medida}</td>
                       <td>{product.stock_prod}</td>
-                      <td>${Number(product.precio_prod).toFixed(2)}</td>
+                      <td>S/.{Number(product.precio_prod).toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
