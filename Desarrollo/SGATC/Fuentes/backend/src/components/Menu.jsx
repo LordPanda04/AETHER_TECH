@@ -28,6 +28,8 @@ const Menu = () => {
     tipodeguardado: '',
     cantidad: 0
   });
+  const [showLotesModal, setShowLotesModal] = useState(false);
+  const [productoLotes, setProductoLotes] = useState([]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -165,6 +167,18 @@ const Menu = () => {
     }
   };
 
+  const handleSelectProduct = async (id_prod) => {
+    setSelectedProductId(id_prod);
+    try {
+      const response = await axios.get(`http://localhost:5000/api/lotes/${id_prod}`);
+      setProductoLotes(response.data);
+      setShowLotesModal(true); // Mostrar modal
+    } catch (error) {
+      console.error('Error al cargar lotes:', error);
+      alert('Error al cargar información de lotes');
+    }
+  };
+
   if (isLoading) {
     return <div className="loading">Cargando productos...</div>;
   }
@@ -270,7 +284,7 @@ const Menu = () => {
                   {products.map((product) => (
                     <tr 
                       key={product.id_prod}
-                      onClick={() => setSelectedProductId(product.id_prod)}
+                      onClick={() => handleSelectProduct(product.id_prod)}
                       className={selectedProductId === product.id_prod ? 'selected-row' : ''}
                     >
                       <td>{product.id_prod}</td>
@@ -429,6 +443,49 @@ const Menu = () => {
                   className="modal-cancel-btn"
                 >
                   Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal para mostrar lotes */}
+        {showLotesModal && (
+          <div className="modal-overlay">
+            <div className="modal-container" style={{ maxWidth: '800px' }}>
+              <h3>Lotes del Producto: {products.find(p => p.id_prod === selectedProductId)?.nombre}</h3>
+              
+              <table className="products-table">
+                <thead>
+                  <tr>
+                    <th>ID Lote</th>
+                    <th>Cantidad</th>
+                    <th>Fecha Caducidad</th>
+                    <th>Días Restantes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productoLotes.map((lote) => (
+                    <tr key={lote.id_lote}>
+                      <td>{lote.id_lote}</td>
+                      <td>{lote.cantidad_lote}</td>
+                      <td>{new Date(lote.fecha_caducidad).toLocaleDateString()}</td>
+                      <td>
+                        {Math.floor(
+                          (new Date(lote.fecha_caducidad) - new Date()) / (1000 * 60 * 60 * 24)
+                        )} días
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div className="modal-buttons">
+                <button 
+                  onClick={() => setShowLotesModal(false)}
+                  className="modal-cancel-btn"
+                >
+                  Cerrar
                 </button>
               </div>
             </div>

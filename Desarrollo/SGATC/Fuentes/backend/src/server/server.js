@@ -54,6 +54,23 @@ app.get('/api/productos', (req, res) => {
   });
 });
 
+// Nueva ruta para obtener lotes por producto
+app.get('/api/lotes/:id_prod', (req, res) => {
+  const { id_prod } = req.params;
+  const query = `
+    SELECT * FROM lote 
+    WHERE id_prod = ?
+    ORDER BY fecha_caducidad ASC
+  `;
+  db.query(query, [id_prod], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Error al obtener lotes' });
+    }
+    res.json(results);
+  });
+});
+
 // Iniciar servidor
 const PORT = 5000;
 app.listen(PORT, () => {
