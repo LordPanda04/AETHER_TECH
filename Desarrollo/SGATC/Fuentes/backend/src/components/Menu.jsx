@@ -225,12 +225,6 @@ const Menu = () => {
                 >
                   Ordenar por Tipo
                 </button>
-                <button 
-                  onClick={() => requestSort('fvencimiento')}
-                  className="sort-btn"
-                >
-                  Ordenar por Fecha
-                </button>
               </div>
             </div>
 
