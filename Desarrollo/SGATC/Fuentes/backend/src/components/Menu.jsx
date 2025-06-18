@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import productsData from './productsData';
+import axios from 'axios';
+//import productsData from './productsData';
 import './Menu.css';
 import metroLogo from '../images/METRO.png'; 
 
@@ -29,10 +30,25 @@ const Menu = () => {
   });
 
   useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/productos');
+        setProducts(response.data);
+      } catch (error) {
+        console.error('Error al cargar productos:', error);
+        alert('Error al cargar productos');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  /*useEffect(() => {
     setProducts(productsData);
     setFilteredProducts(productsData);
     setIsLoading(false);
-  }, []);
+  }, []);*/
 
   // Generar código consecutivo basado en el último producto
   const generateConsecutiveCode = () => {
@@ -42,7 +58,7 @@ const Menu = () => {
     const number = parseInt(lastCode.split('-')[1]) + 1;
     return `PROD-${number.toString().padStart(3, '0')}`;
   };
-
+   
   useEffect(() => {
     const results = products.filter(product =>
       product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -244,25 +260,27 @@ const Menu = () => {
                   <tr>
                     <th>Código</th>
                     <th>Nombre</th>
-                    <th>Lote</th>
-                    <th>F. Vencimiento</th>
-                    <th>Tipo de Guardado</th>
-                    <th>Cantidad</th>
+                    <th>Marca</th>
+                    <th>Categoría</th>
+                    <th>Unidad</th>
+                    <th>Stock</th>
+                    <th>Precio</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProducts.map((product) => (
+                  {products.map((product) => (
                     <tr 
-                      key={product.id} 
-                      className={selectedProductId === product.id ? 'selected-row' : ''}
-                      onClick={() => setSelectedProductId(product.id)}
+                      key={product.id_prod}
+                      onClick={() => setSelectedProductId(product.id_prod)}
+                      className={selectedProductId === product.id_prod ? 'selected-row' : ''}
                     >
-                      <td>{product.codigo}</td>
+                      <td>{product.id_prod}</td>
                       <td>{product.nombre}</td>
-                      <td>{product.lote}</td>
-                      <td>{product.fvencimiento}</td>
-                      <td>{product.tipodeguardado}</td>
-                      <td>{product.cantidad}</td>
+                      <td>{product.marca}</td>
+                      <td>{product.nombre_categ}</td> {/* Desde JOIN con categoría */}
+                      <td>{product.unid_medida}</td>
+                      <td>{product.stock_prod}</td>
+                      <td>${product.precio_prod.toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
