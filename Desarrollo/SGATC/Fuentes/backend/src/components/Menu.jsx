@@ -53,8 +53,8 @@ const Menu = () => {
   // Generar código consecutivo basado en el último producto
   const generateConsecutiveCode = () => {
     if (products.length === 0) return 'PROD-001';
-    
-    const lastCode = products[products.length - 1].codigo;
+
+    const lastCode = products[products.length - 1].id_prod;  // Cambiado de codigo a id_prod
     const number = parseInt(lastCode.split('-')[1]) + 1;
     return `PROD-${number.toString().padStart(3, '0')}`;
   };
@@ -62,14 +62,13 @@ const Menu = () => {
   useEffect(() => {
     const results = products.filter(product =>
       product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.lote.toLowerCase().includes(searchTerm.toLowerCase())
+      product.id_prod.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredProducts(results);
   }, [searchTerm, products]);
 
-  const handleDelete = (id) => {
-    const updatedProducts = products.filter(product => product.id !== id);
+  const handleDelete = (id_prod) => {  // Cambiado de id a id_prod
+    const updatedProducts = products.filter(product => product.id_prod !== id_prod);
     setProducts(updatedProducts);
     setFilteredProducts(updatedProducts);
     setSelectedProductId(null);
@@ -77,15 +76,15 @@ const Menu = () => {
     alert(`Producto eliminado correctamente`);
   };
 
-  const handleRestock = (id, quantity) => {
+  const handleRestock = (id_prod, quantity) => {  // Cambiado de id a id_prod
     const updatedProducts = products.map(product => 
-      product.id === id ? { ...product, cantidad: product.cantidad + quantity } : product
+      product.id_prod === id_prod ? { ...product, stock_prod: product.stock_prod + quantity } : product
     );
     setProducts(updatedProducts);
     setFilteredProducts(updatedProducts);
     setSelectedProductId(null);
     setShowRestockModal(false);
-    alert(`Producto reabastecido correctamente. Nueva cantidad: ${updatedProducts.find(p => p.id === id).cantidad}`);
+    alert(`Producto reabastecido correctamente. Nueva cantidad: ${updatedProducts.find(p => p.id === id_prod).cantidad}`);
   };
 
   const handleAddProduct = () => {
@@ -280,7 +279,7 @@ const Menu = () => {
                       <td>{product.nombre_categ}</td> {/* Desde JOIN con categoría */}
                       <td>{product.unid_medida}</td>
                       <td>{product.stock_prod}</td>
-                      <td>${product.precio_prod.toFixed(2)}</td>
+                      <td>${Number(product.precio_prod).toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -374,7 +373,7 @@ const Menu = () => {
             <div className="modal-container">
               <h3>Confirmar Eliminación</h3>
               <p>¿Estás seguro que deseas eliminar el producto: <strong>{selectedProduct.nombre}</strong>?</p>
-              <p>Código: {selectedProduct.codigo} | Lote: {selectedProduct.lote}</p>
+              <p>Código: {selectedProduct.id_prod} | Marca: {selectedProduct.marca}</p>
               <div className="modal-buttons">
                 <button 
                   onClick={() => handleDelete(selectedProduct.id)} 
