@@ -168,14 +168,30 @@ const Menu = () => {
   };
 
   const handleSelectProduct = async (id_prod) => {
-    setSelectedProductId(id_prod);
     try {
+      setSelectedProductId(id_prod);
+      
+      // Verificar primero si el producto existe
+      const product = products.find(p => p.id_prod === id_prod);
+      if (!product) {
+        throw new Error('Producto no encontrado');
+      }
+
       const response = await axios.get(`http://localhost:5000/api/lotes/${id_prod}`);
+      
+      if (!response.data) {
+        throw new Error('No se recibieron datos de lotes');
+      }
+
       setProductoLotes(response.data);
-      setShowLotesModal(true); // Mostrar modal
+      setShowLotesModal(true);
+      
     } catch (error) {
-      console.error('Error al cargar lotes:', error);
-      alert('Error al cargar información de lotes');
+      console.error('Error detallado:', {
+        error: error.message,
+        response: error.response?.data
+      });
+      alert(`Error al cargar lotes: ${error.message}`);
     }
   };
 
