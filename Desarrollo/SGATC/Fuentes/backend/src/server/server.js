@@ -2,6 +2,8 @@ const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const app = express();
+app.use(cors());
+app.use(express.json());
 
 // Configuración de la conexión a MySQL (usa tus credenciales)
 const db = mysql.createConnection({
@@ -32,6 +34,40 @@ app.post('/api/login', (req, res) => {
     } else {
       res.status(401).json({ success: false, error: 'Usuario o contraseña incorrectos' });
     }
+  });
+});
+
+// Ruta para obtener productos con categorías
+app.get('/api/productos', (req, res) => {
+  const query = `
+    SELECT p.*, c.nombre_categ 
+    FROM productos p
+    JOIN categoria c ON p.id_categ = c.id_categ
+    WHERE p.activo = 1
+  `;
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Error al obtener productos' });
+    }
+    res.json(results);
+  });
+});
+
+// Nueva ruta para obtener lotes por producto
+app.get('/api/lotes/:id_prod', (req, res) => {
+  const { id_prod } = req.params;
+  const query = `
+    SELECT * FROM lote 
+    WHERE id_prod = ?
+    ORDER BY fecha_caducidad ASC
+  `;
+  db.query(query, [id_prod], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Error al obtener lotes' });
+    }
+    res.json(results);
   });
 });
 

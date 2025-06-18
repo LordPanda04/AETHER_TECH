@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import productsData from './productsData';
+import axios from 'axios';
+//import productsData from './productsData';
 import './Menu.css';
 import metroLogo from '../images/METRO.png'; 
 
@@ -27,33 +28,49 @@ const Menu = () => {
     tipodeguardado: '',
     cantidad: 0
   });
+  const [showLotesModal, setShowLotesModal] = useState(false);
+  const [productoLotes, setProductoLotes] = useState([]);
 
   useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/productos');
+        setProducts(response.data);
+      } catch (error) {
+        console.error('Error al cargar productos:', error);
+        alert('Error al cargar productos');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  /*useEffect(() => {
     setProducts(productsData);
     setFilteredProducts(productsData);
     setIsLoading(false);
-  }, []);
+  }, []);*/
 
   // Generar código consecutivo basado en el último producto
   const generateConsecutiveCode = () => {
     if (products.length === 0) return 'PROD-001';
-    
-    const lastCode = products[products.length - 1].codigo;
+
+    const lastCode = products[products.length - 1].id_prod;  // Cambiado de codigo a id_prod
     const number = parseInt(lastCode.split('-')[1]) + 1;
     return `PROD-${number.toString().padStart(3, '0')}`;
   };
-
+   
   useEffect(() => {
     const results = products.filter(product =>
       product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.lote.toLowerCase().includes(searchTerm.toLowerCase())
+      product.id_prod.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredProducts(results);
   }, [searchTerm, products]);
 
-  const handleDelete = (id) => {
-    const updatedProducts = products.filter(product => product.id !== id);
+  const handleDelete = (id_prod) => {  // Cambiado de id a id_prod
+    const updatedProducts = products.filter(product => product.id_prod !== id_prod);
     setProducts(updatedProducts);
     setFilteredProducts(updatedProducts);
     setSelectedProductId(null);
@@ -61,15 +78,15 @@ const Menu = () => {
     alert(`Producto eliminado correctamente`);
   };
 
-  const handleRestock = (id, quantity) => {
+  const handleRestock = (id_prod, quantity) => {  // Cambiado de id a id_prod
     const updatedProducts = products.map(product => 
-      product.id === id ? { ...product, cantidad: product.cantidad + quantity } : product
+      product.id_prod === id_prod ? { ...product, stock_prod: product.stock_prod + quantity } : product
     );
     setProducts(updatedProducts);
     setFilteredProducts(updatedProducts);
     setSelectedProductId(null);
     setShowRestockModal(false);
-    alert(`Producto reabastecido correctamente. Nueva cantidad: ${updatedProducts.find(p => p.id === id).cantidad}`);
+    alert(`Producto reabastecido correctamente. Nueva cantidad: ${updatedProducts.find(p => p.id === id_prod).cantidad}`);
   };
 
   const handleAddProduct = () => {
@@ -147,6 +164,34 @@ const Menu = () => {
       }
       setRestockQuantity(10);
       setShowRestockModal(true);
+    }
+  };
+
+  const handleSelectProduct = async (id_prod) => {
+    try {
+      setSelectedProductId(id_prod);
+      
+      // Verificar primero si el producto existe
+      const product = products.find(p => p.id_prod === id_prod);
+      if (!product) {
+        throw new Error('Producto no encontrado');
+      }
+
+      const response = await axios.get(`http://localhost:5000/api/lotes/${id_prod}`);
+      
+      if (!response.data) {
+        throw new Error('No se recibieron datos de lotes');
+      }
+
+      setProductoLotes(response.data);
+      setShowLotesModal(true);
+      
+    } catch (error) {
+      console.error('Error detallado:', {
+        error: error.message,
+        response: error.response?.data
+      });
+      alert(`Error al cargar lotes: ${error.message}`);
     }
   };
 
@@ -238,25 +283,27 @@ const Menu = () => {
                   <tr>
                     <th>Código</th>
                     <th>Nombre</th>
-                    <th>Lote</th>
-                    <th>F. Vencimiento</th>
-                    <th>Tipo de Guardado</th>
-                    <th>Cantidad</th>
+                    <th>Marca</th>
+                    <th>Categoría</th>
+                    <th>Unidad</th>
+                    <th>Stock</th>
+                    <th>Precio</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProducts.map((product) => (
+                  {products.map((product) => (
                     <tr 
-                      key={product.id} 
-                      className={selectedProductId === product.id ? 'selected-row' : ''}
-                      onClick={() => setSelectedProductId(product.id)}
+                      key={product.id_prod}
+                      onClick={() => handleSelectProduct(product.id_prod)}
+                      className={selectedProductId === product.id_prod ? 'selected-row' : ''}
                     >
-                      <td>{product.codigo}</td>
+                      <td>{product.id_prod}</td>
                       <td>{product.nombre}</td>
-                      <td>{product.lote}</td>
-                      <td>{product.fvencimiento}</td>
-                      <td>{product.tipodeguardado}</td>
-                      <td>{product.cantidad}</td>
+                      <td>{product.marca}</td>
+                      <td>{product.nombre_categ}</td> {/* Desde JOIN con categoría */}
+                      <td>{product.unid_medida}</td>
+                      <td>{product.stock_prod}</td>
+                      <td>S/.{Number(product.precio_prod).toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -350,7 +397,7 @@ const Menu = () => {
             <div className="modal-container">
               <h3>Confirmar Eliminación</h3>
               <p>¿Estás seguro que deseas eliminar el producto: <strong>{selectedProduct.nombre}</strong>?</p>
-              <p>Código: {selectedProduct.codigo} | Lote: {selectedProduct.lote}</p>
+              <p>Código: {selectedProduct.id_prod} | Marca: {selectedProduct.marca}</p>
               <div className="modal-buttons">
                 <button 
                   onClick={() => handleDelete(selectedProduct.id)} 
@@ -406,6 +453,49 @@ const Menu = () => {
                   className="modal-cancel-btn"
                 >
                   Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal para mostrar lotes */}
+        {showLotesModal && (
+          <div className="modal-overlay">
+            <div className="modal-container" style={{ maxWidth: '800px' }}>
+              <h3>Lotes del Producto: {products.find(p => p.id_prod === selectedProductId)?.nombre}</h3>
+              
+              <table className="products-table">
+                <thead>
+                  <tr>
+                    <th>ID Lote</th>
+                    <th>Cantidad</th>
+                    <th>Fecha Caducidad</th>
+                    <th>Días Restantes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productoLotes.map((lote) => (
+                    <tr key={lote.id_lote}>
+                      <td>{lote.id_lote}</td>
+                      <td>{lote.cantidad_lote}</td>
+                      <td>{new Date(lote.fecha_caducidad).toLocaleDateString()}</td>
+                      <td>
+                        {Math.floor(
+                          (new Date(lote.fecha_caducidad) - new Date()) / (1000 * 60 * 60 * 24)
+                        )} días
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div className="modal-buttons">
+                <button 
+                  onClick={() => setShowLotesModal(false)}
+                  className="modal-cancel-btn"
+                >
+                  Cerrar
                 </button>
               </div>
             </div>
