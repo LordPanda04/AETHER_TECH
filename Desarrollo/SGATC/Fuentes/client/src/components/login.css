@@ -1,0 +1,74 @@
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f9df18;
+  font-family: 'Arial', sans-serif;
+}
+
+.login-container {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  width: 400px;
+  text-align: center;
+}
+
+.logo-container {
+  margin-bottom: 2rem;
+}
+
+.metro-logo {
+  height: 180px;
+  width: auto;
+  object-fit: contain;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.form-group label {
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.login-input {
+  width: 92%;
+  padding: 14px;
+  border: 3px solid #e12213;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.login-button {
+  background: #e12213;
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: all 0.3s;
+  text-transform: uppercase;
+}
+
+.login-button:hover {
+  background: #c11a0f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(225, 34, 19, 0.3);
+}
