@@ -126,6 +126,79 @@ app.post('/api/productos', (req, res) => {
   );
 });
 
+// Ruta para agregar un nuevo lote
+// server.js
+app.post('/api/lotes', async (req, res) => {
+  const { id_lote, cantidad_lote, fecha_caducidad, id_prod } = req.body;
+
+  console.log("Datos recibidos:", req.body);
+
+  // Validación más robusta
+  if (!id_lote || !cantidad_lote || !fecha_caducidad || !id_prod) {
+    return res.status(400).json({ 
+      error: 'Faltan campos obligatorios',
+      detalles: {
+        recibido: req.body,
+        requerido: ['id_lote', 'cantidad_lote', 'fecha_caducidad', 'id_prod']
+      }
+    });
+  }
+
+  try {
+    // 1. Verificar que el producto existe
+    const [producto] = await db.promise().query(
+      'SELECT id_prod FROM productos WHERE id_prod = ? AND activo = 1', 
+      [id_prod]
+    );
+
+    if (producto.length === 0) {
+      console.error(`Producto no encontrado: ${id_prod}`);
+      return res.status(404).json({ 
+        error: 'Producto no encontrado',
+        id_prod_recibido: id_prod,
+      });
+    }
+
+    // 2. Insertar el lote
+    const [result] = await db.promise().query(
+      `INSERT INTO lote 
+       (id_lote, cantidad_lote, fecha_caducidad, id_prod) 
+       VALUES (?, ?, ?, ?)`,
+      [id_lote, cantidad_lote, fecha_caducidad, id_prod]
+    );
+
+    // 3. Actualizar stock
+    await db.promise().query(
+      `UPDATE productos 
+       SET stock_prod = stock_prod + ? 
+       WHERE id_prod = ?`,
+      [cantidad_lote, id_prod]
+    );
+
+    res.json({ 
+      success: true, 
+      message: 'Lote creado y stock actualizado',
+      id_lote: id_lote
+    });
+
+  } catch (err) {
+    console.error('Error completo:', {
+      mensaje: err.message,
+      codigo: err.code,
+      stack: err.stack
+    });
+    
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ error: 'El ID de lote ya existe' });
+    }
+    
+    res.status(500).json({ 
+      error: 'Error en el servidor',
+      detalles: err.message 
+    });
+  }
+});
+
 // Ruta para obtener el último ID de producto
 app.get('/api/productos/ultimo-id', (req, res) => {
   const query = `
