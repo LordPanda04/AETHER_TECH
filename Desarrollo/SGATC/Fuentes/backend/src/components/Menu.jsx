@@ -428,7 +428,7 @@ const Menu = () => {
                   type="text"
                   value={newProduct.marca}
                   onChange={(e) => setNewProduct({...newProduct, marca: e.target.value})}
-                  placeholder="Ej: Gloria"
+                  placeholder="Marca del producto"
                   required
                 />
               </div>
@@ -477,9 +477,16 @@ const Menu = () => {
                 <input
                   type="number"
                   min="1"
-                  value={newProduct.stock_prod}
-                  onChange={(e) => setNewProduct({...newProduct, stock_prod: parseInt(e.target.value) || 0})}
+                  value={newProduct.stock_prod || ''}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    setNewProduct({
+                      ...newProduct,
+                      stock_prod: isNaN(value) ? '' : value
+                    });
+                  }}
                   required
+                  placeholder="Stock del producto"
                 />
               </div>
 
@@ -489,9 +496,16 @@ const Menu = () => {
                   type="number"
                   min="0.01"
                   step="0.01"
-                  value={newProduct.precio_prod}
-                  onChange={(e) => setNewProduct({...newProduct, precio_prod: parseFloat(e.target.value) || 0})}
+                  value={newProduct.precio_prod || ''}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    setNewProduct({
+                      ...newProduct,
+                      precio_prod: isNaN(value) ? '' : value
+                    });
+                  }}
                   required
+                  placeholder="Precio del producto"
                 />
               </div>
               
