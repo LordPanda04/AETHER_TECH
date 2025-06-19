@@ -4,7 +4,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f9df18; /* Amarillo Metro */
+  background-image: url('../images/fondometro.jpeg'); 
   font-family: 'Arial', sans-serif;
 }
 
