@@ -533,18 +533,99 @@
 }
 
 /* Estilos para el modal de agregar producto */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-container {
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
 .modal-container h3 {
-  color: #4CAF50;
+  color: #2c3e50;
   margin-bottom: 25px;
   text-align: center;
   font-size: 22px;
+  font-weight: 600;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
 }
 
+/* Contenedor del formulario */
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Estilos uniformes para todos los campos */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 15px;
+  transition: all 0.3s;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #4CAF50;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+/* Estilos para los botones */
 .modal-buttons {
   display: flex;
   justify-content: center;
   gap: 15px;
-  margin-top: 30px;
+  margin-top: 20px;
+}
+
+.modal-confirm-btn,
+.modal-cancel-btn {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 15px;
+  flex: 1;
+  max-width: 200px;
+  text-align: center;
 }
 
 .modal-confirm-btn.add-btn {
@@ -554,6 +635,17 @@
 
 .modal-confirm-btn.add-btn:hover {
   background-color: #3e8e41;
+  transform: translateY(-2px);
+}
+
+.modal-cancel-btn {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.modal-cancel-btn:hover {
+  background-color: #ddd;
+  transform: translateY(-2px);
 }
 
 @media (max-width: 576px) {
