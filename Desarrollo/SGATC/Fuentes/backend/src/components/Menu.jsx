@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import EliminarLotes from './EliminarLotes';
 import './Menu.css';
 import metroLogo from '../images/METRO.png'; 
 
@@ -9,6 +10,7 @@ const Menu = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showEliminarLotes, setShowEliminarLotes] = useState(false);
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: 'ascending'
@@ -345,11 +347,17 @@ const Menu = () => {
             Reabastecer Producto
           </button>
           
-          <button 
-            onClick={() => initiateAction('delete')}
+          <button
+            onClick={() => {
+              if (!selectedProductId) {
+                alert('Selecciona un producto primero');
+                return;
+              }
+              setShowEliminarLotes(true);
+            }}
             className="side-menu-btn delete-btn"
           >
-            Eliminar Producto
+            Eliminar Lotes
           </button>
 
           <button 
@@ -661,6 +669,14 @@ const Menu = () => {
               </div>
             </div>
           </div>
+        )}
+        {/* Modal para eliminar lotes */}
+        {showEliminarLotes && (
+          <EliminarLotes
+            productId={selectedProductId}
+            productName={products.find(p => p.id_prod === selectedProductId)?.nombre}
+            onClose={() => setShowEliminarLotes(false)}
+          />
         )}
       </div>
     </div>
