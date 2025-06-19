@@ -606,25 +606,6 @@
   box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
-.description-input {
-  width: 100%;
-  padding: 12px 15px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 15px;
-  transition: all 0.3s;
-  box-sizing: border-box;
-  resize: vertical;
-  min-height: 80px;
-  font-family: inherit;
-}
-
-.description-input:focus {
-  border-color: #4CAF50;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
-}
-
 /* Estilos para los botones */
 .modal-buttons {
   display: flex;

@@ -24,11 +24,10 @@ const Menu = () => {
     id_prod: '', // Se generará automáticamente
     nombre: '',
     marca: '',
-    descrip: '', // Nuevo campo añadido
     id_categ: '',
     unid_medida: '',
-    stock_prod: '',
-    precio_prod: '',
+    stock_prod: 0,
+    precio_prod: 0,
     activo: 1
   });
   const [categorias, setCategorias] = useState([]);
@@ -140,11 +139,10 @@ const Menu = () => {
   };
 
   const handleAddProduct = async () => {
-    // Validación de campos (añadir descripción si es requerida)
+    // Validación de campos
     if (!newProduct.nombre || !newProduct.marca || !newProduct.id_categ || 
-        !newProduct.unid_medida || !newProduct.stock_prod || newProduct.stock_prod < 1 || 
-        !newProduct.precio_prod || newProduct.precio_prod <= 0) {
-      alert('Por favor complete todos los campos obligatorios');
+        !newProduct.unid_medida || newProduct.stock_prod <= 0 || newProduct.precio_prod <= 0) {
+      alert('Por favor complete todos los campos correctamente');
       return;
     }
 
@@ -156,8 +154,8 @@ const Menu = () => {
       const productToAdd = {
         ...newProduct,
         id_prod: productCode,
+        descrip: '', // Campo descripción vacío por defecto
         activo: 1 // Producto activo por defecto
-        // descrip ya está incluido en ...newProduct
       };
 
       // Enviar a la API
@@ -190,11 +188,10 @@ const Menu = () => {
         id_prod: '',
         nombre: '',
         marca: '',
-        descrip: '',
         id_categ: '',
         unid_medida: '',
-        stock_prod: '',
-        precio_prod: '',
+        stock_prod: 0,
+        precio_prod: 0,
         activo: 1
       });
       
@@ -468,18 +465,6 @@ const Menu = () => {
                   onChange={(e) => setNewProduct({...newProduct, marca: e.target.value})}
                   placeholder="Marca del producto"
                   required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Descripción:</label>
-                <textarea
-                  value={newProduct.descrip}
-                  onChange={(e) => setNewProduct({...newProduct, descrip: e.target.value})}
-                  placeholder="Descripción del producto (máx. 60 caracteres)"
-                  maxLength="60"
-                  rows="3"
-                  className="description-input"
                 />
               </div>
               
