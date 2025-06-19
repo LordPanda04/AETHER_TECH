@@ -83,6 +83,23 @@ app.get('/api/categorias', (req, res) => {
   });
 });
 
+app.get('/api/productos/completos', (req, res) => {
+  const query = `
+    SELECT p.*, c.nombre_categ 
+    FROM productos p
+    JOIN categoria c ON p.id_categ = c.id_categ
+    WHERE p.activo = 1
+  `;
+  
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Error al obtener productos completos' });
+    }
+    res.json(results);
+  });
+});
+
 // Ruta para agregar un nuevo producto
 app.post('/api/productos', (req, res) => {
   const { id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod } = req.body;

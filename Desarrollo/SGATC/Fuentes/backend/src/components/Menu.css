@@ -36,6 +36,15 @@
   overflow-y: auto;
 }
 
+.export-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.export-btn:hover {
+  background-color: #218838;
+}
+
 /* Logo y título */
 .logo-container {
   text-align: center;
