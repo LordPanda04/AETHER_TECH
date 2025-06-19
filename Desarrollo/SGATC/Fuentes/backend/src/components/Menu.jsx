@@ -22,12 +22,17 @@ const Menu = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [restockQuantity, setRestockQuantity] = useState(10);
   const [newProduct, setNewProduct] = useState({
+    id_prod: '', // Se generará automáticamente
     nombre: '',
-    lote: '',
-    fvencimiento: '---',
-    tipodeguardado: '',
-    cantidad: 0
+    marca: '',
+    id_categ: '',
+    unid_medida: '',
+    stock_prod: 0,
+    precio_prod: 0,
+    activo: 1
   });
+  const [categorias, setCategorias] = useState([]);
+  const [isLoadingCategorias, setIsLoadingCategorias] = useState(false);
   const [showLotesModal, setShowLotesModal] = useState(false);
   const [productoLotes, setProductoLotes] = useState([]);
 
@@ -44,6 +49,22 @@ const Menu = () => {
       }
     };
     fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    const fetchCategorias = async () => {
+      setIsLoadingCategorias(true);
+      try {
+        const response = await axios.get('http://localhost:5000/api/categorias');
+        setCategorias(response.data);
+      } catch (error) {
+        console.error('Error al cargar categorías:', error);
+        alert('Error al cargar categorías');
+      } finally {
+        setIsLoadingCategorias(false);
+      }
+    };
+    fetchCategorias();
   }, []);
 
   /*useEffect(() => {
