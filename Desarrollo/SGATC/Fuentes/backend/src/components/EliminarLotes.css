@@ -1,0 +1,72 @@
+/* ---------- EliminarLotes – estilos adicionales ---------- */
+
+/* Hacemos el overlay un poco más oscuro que el de otros modales */
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.65);
+}
+
+/* Contenedor principal */
+.modal-container {
+  max-width: 700px;        /* un poco más angosto que el showLotes */
+  width: 90%;
+  background-color: #ffffff;
+  padding: 35px 40px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+
+/* Título rojo Metro */
+.modal-container h3 {
+  color: #e12213;
+  margin-bottom: 28px;
+  font-size: 26px;
+}
+
+/* Tabla reutiliza la clase .products-table existente,
+   pero añadimos separación vertical para este modal             */
+.modal-container .products-table {
+  margin-bottom: 25px;
+}
+
+.modal-container .products-table th {
+  background-color: #1a2530;     /* mismo azul oscuro que tu sidebar */
+  color: #fff;
+}
+
+/* Botón “Eliminar” dentro de la tabla */
+.modal-container .delete-btn {
+  background-color: #ff4444;
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+
+.modal-container .delete-btn:hover {
+  background-color: #cc0000;
+}
+
+/* Botones inferiores (Confirmar / Cancelar / Cerrar) */
+.modal-buttons, .modal-container > button.modal-cancel-btn {
+  margin-top: 25px;
+}
+
+.modal-confirm-btn.delete-btn {
+  background-color: #ff4444;
+}
+
+.modal-confirm-btn.delete-btn:hover {
+  background-color: #cc0000;
+}
+
+.modal-cancel-btn {
+  background-color: #f0f0f0;
+}
+
+.modal-cancel-btn:hover {
+  background-color: #e0e0e0;
+}

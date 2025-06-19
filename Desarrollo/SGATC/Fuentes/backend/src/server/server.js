@@ -148,6 +148,23 @@ app.get('/api/productos/ultimo-id', (req, res) => {
   });
 });
 
+//Ruta para eliminar lote
+app.delete('/api/lotes/:id_lote', (req, res) => {
+  const { id_lote } = req.params;
+  const sql = 'DELETE FROM lote WHERE id_lote = ?';
+  db.query(sql, [id_lote], (err, result) => {
+    if (err) {
+      console.error('Error al eliminar lote:', err);
+      return res.status(500).json({ success: false, error: 'Error del servidor' });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, error: 'Lote no encontrado' });
+    }
+    res.json({ success: true });
+  });
+});
+
+
 // Iniciar servidor
 const PORT = 5000;
 app.listen(PORT, () => {
