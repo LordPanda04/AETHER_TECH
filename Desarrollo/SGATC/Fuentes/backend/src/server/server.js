@@ -71,6 +71,72 @@ app.get('/api/lotes/:id_prod', (req, res) => {
   });
 });
 
+// Ruta para obtener todas las categorías
+app.get('/api/categorias', (req, res) => {
+  const query = 'SELECT * FROM categoria ORDER BY nombre_categ';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Error al obtener categorías' });
+    }
+    res.json(results);
+  });
+});
+
+// Ruta para agregar un nuevo producto
+app.post('/api/productos', (req, res) => {
+  const { id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod, activo } = req.body;
+  
+  // Validación básica
+  if (!id_prod || !nombre || !marca || !id_categ || !unid_medida || stock_prod === undefined || precio_prod === undefined) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  }
+
+  const query = `
+    INSERT INTO productos 
+    (id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod, activo) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  
+  db.query(query, 
+    [id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod, activo], 
+    (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Error al agregar producto' });
+      }
+      res.json({ 
+        success: true, 
+        product: { 
+          id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod, activo 
+        } 
+      });
+    }
+  );
+});
+
+// Ruta para obtener el último ID de producto
+app.get('/api/productos/ultimo-id', (req, res) => {
+  const query = `
+    SELECT id_prod 
+    FROM productos 
+    ORDER BY 
+      CAST(SUBSTRING(id_prod, 5) AS UNSIGNED) DESC, 
+      id_prod DESC
+    LIMIT 1
+  `;
+  
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Error al obtener último ID de producto' });
+    }
+    
+    const ultimoId = results[0]?.id_prod || null;
+    res.json({ ultimoId });
+  });
+});
+
 // Iniciar servidor
 const PORT = 5000;
 app.listen(PORT, () => {

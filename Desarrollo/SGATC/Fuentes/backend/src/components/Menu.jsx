@@ -41,6 +41,7 @@ const Menu = () => {
       try {
         const response = await axios.get('http://localhost:5000/api/productos');
         setProducts(response.data);
+        setFilteredProducts(response.data);
       } catch (error) {
         console.error('Error al cargar productos:', error);
         alert('Error al cargar productos');
@@ -74,28 +75,40 @@ const Menu = () => {
   }, []);*/
 
   // Generar código consecutivo basado en el último producto
-  const generateProductCode = () => {
-    if (products.length === 0) return 'PRD-001';
-    
-    // Encuentra el máximo código actual
-    const maxCode = products.reduce((max, product) => {
-      const currentNum = parseInt(product.id_prod.split('-')[1]);
-      return currentNum > max ? currentNum : max;
-    }, 0);
-    
-    return `PRD-${(maxCode + 1).toString().padStart(3, '0')}`;
+  const generateProductCode = async () => {
+    try {
+      // Consultar al backend por el último ID
+      const response = await axios.get('http://localhost:5000/api/productos/ultimo-id');
+      const ultimoId = response.data.ultimoId;
+      
+      // Si no hay productos, empezar con PRD-001
+      if (!ultimoId) return 'PRD-001';
+      
+      // Extraer el número del último código (ej: "PRD-126" → 126)
+      const numero = parseInt(ultimoId.split('-')[1]);
+      
+      // Incrementar y formatear con ceros a la izquierda
+      const nuevoNumero = numero + 1;
+      return `PRD-${nuevoNumero.toString().padStart(3, '0')}`;
+    } catch (error) {
+      console.error('Error al generar código:', error);
+      // Fallback: usar la cantidad de productos + 1
+      return `PRD-${(products.length + 1).toString().padStart(3, '0')}`;
+    }
   };
    
   useEffect(() => {
     const results = products.filter(product => {
       const searchTermLower = searchTerm.toLowerCase();
-      return (
-        product.id_prod.toLowerCase().includes(searchTermLower) ||
-        product.nombre.toLowerCase().includes(searchTermLower) ||
-        (product.nombre_categ && product.nombre_categ.toLowerCase().includes(searchTermLower)) ||
-        product.unid_medida.toLowerCase().includes(searchTermLower)
-      );
+      
+      return [
+        product.id_prod?.toLowerCase() || '',
+        product.nombre?.toLowerCase() || '',
+        product.nombre_categ?.toLowerCase() || '',
+        product.unid_medida?.toLowerCase() || ''
+      ].some(field => field.includes(searchTermLower));
     });
+    
     setFilteredProducts(results);
   }, [searchTerm, products]);
 
@@ -120,28 +133,35 @@ const Menu = () => {
   };
 
   const handleAddProduct = async () => {
-    // Validación de campos obligatorios
-    if (!newProduct.nombre || !newProduct.marca || !newProduct.id_categ || 
+    // Validación de campos (mantener la que ya tienes)
+    if (!newProduct.nombre.trim() || !newProduct.marca.trim() || !newProduct.id_categ || 
         !newProduct.unid_medida || newProduct.stock_prod <= 0 || newProduct.precio_prod <= 0) {
       alert('Por favor complete todos los campos correctamente');
       return;
     }
 
     try {
-      // Generar código automático
-      const productCode = generateProductCode();
-      
-      // Preparar datos para enviar
+      const productCode = await generateProductCode();
       const productToAdd = {
         ...newProduct,
-        id_prod: productCode
+        id_prod: productCode,
+        descrip: '', // Asegurar que tenga descripción
+        activo: 1,
+        nombre_categ: categorias.find(c => c.id_categ === parseInt(newProduct.id_categ))?.nombre_categ || ''
       };
 
-      // Enviar a la API
       const response = await axios.post('http://localhost:5000/api/productos', productToAdd);
       
-      // Actualizar estado local
-      const updatedProducts = [...products, response.data];
+      // Asegurar que el producto agregado tenga todas las propiedades
+      const newProductWithAllFields = {
+        ...response.data,
+        nombre_categ: productToAdd.nombre_categ,
+        unid_medida: newProduct.unid_medida,
+        stock_prod: newProduct.stock_prod,
+        precio_prod: newProduct.precio_prod
+      };
+
+      const updatedProducts = [...products, newProductWithAllFields];
       setProducts(updatedProducts);
       setFilteredProducts(updatedProducts);
       
@@ -161,7 +181,17 @@ const Menu = () => {
       alert(`Producto agregado correctamente con código: ${productCode}`);
     } catch (error) {
       console.error('Error al agregar producto:', error);
-      alert('Error al agregar producto');
+      let errorMessage = 'Error al agregar producto';
+      
+      if (error.response) {
+        if (error.response.status === 400) {
+          errorMessage = 'Datos inválidos: ' + (error.response.data.message || 'verifique los campos');
+        } else if (error.response.status === 500) {
+          errorMessage = 'Error en el servidor al intentar agregar el producto';
+        }
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -394,18 +424,22 @@ const Menu = () => {
               
               <div className="form-group">
                 <label>Categoría:</label>
-                <select
-                  value={newProduct.id_categ}
-                  onChange={(e) => setNewProduct({...newProduct, id_categ: e.target.value})}
-                  required
-                >
-                  <option value="">Seleccione categoría</option>
-                  {categorias.map(categoria => (
-                    <option key={categoria.id_categ} value={categoria.id_categ}>
-                      {categoria.nombre_categ}
-                    </option>
-                  ))}
-                </select>
+                {isLoadingCategorias ? (
+                  <p>Cargando categorías...</p>
+                ) : (
+                  <select
+                    value={newProduct.id_categ}
+                    onChange={(e) => setNewProduct({...newProduct, id_categ: e.target.value})}
+                    required
+                  >
+                    <option value="">Seleccione categoría</option>
+                    {categorias.map(categoria => (
+                      <option key={categoria.id_categ} value={categoria.id_categ}>
+                        {categoria.nombre_categ}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
               
               <div className="form-group">
