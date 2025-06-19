@@ -211,25 +211,21 @@ const Menu = () => {
 
   const handleShowLotes = async (id_prod) => {
     try {
-      // 1) marca la fila como seleccionada (también sirve para Eliminar/Reabastecer)
       setSelectedProductId(id_prod);
-
-      // 2) verifica que exista
-      const product = products.find(p => p.id_prod === id_prod);
+      const product = filteredProducts.find(p => p.id_prod === id_prod);
       if (!product) throw new Error('Producto no encontrado');
 
-      // 3) consulta los lotes
       const response = await axios.get(`http://localhost:5000/api/lotes/${id_prod}`);
       if (!response.data) throw new Error('No se recibieron datos de lotes');
 
       setProductoLotes(response.data);
+      setSelectedProduct(product); //Guarda el producto para usar en el modal
       setShowLotesModal(true);
     } catch (err) {
       console.error(err);
       alert(`Error al cargar lotes: ${err.message}`);
     }
   };
-
 
   if (isLoading) {
     return <div className="loading">Cargando productos...</div>;
@@ -503,7 +499,8 @@ const Menu = () => {
         {showLotesModal && (
           <div className="modal-overlay">
             <div className="modal-container" style={{ maxWidth: '800px' }}>
-              <h3>Lotes del Producto: {products.find(p => p.id_prod === selectedProductId)?.nombre}</h3>
+              <h3>Lotes del Producto: {selectedProduct?.nombre || selectedProductId}</h3>
+
               
               <table className="products-table">
                 <thead>
@@ -532,7 +529,10 @@ const Menu = () => {
 
               <div className="modal-buttons">
                 <button 
-                  onClick={() => setShowLotesModal(false)}
+                  onClick={() => {
+                    setShowLotesModal(false);
+                    setSelectedProduct(null);
+                  }}
                   className="modal-cancel-btn"
                 >
                   Cerrar
