@@ -30,6 +30,8 @@ const Menu = () => {
   });
   const [showLotesModal, setShowLotesModal] = useState(false);
   const [productoLotes, setProductoLotes] = useState([]);
+  const [selectedSortKey, setSelectedSortKey] = useState('');
+
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -121,6 +123,24 @@ const Menu = () => {
     navigate('/login');
   };
 
+  const sortArray = (array, key, direction = 'ascending') => {
+    return [...array].sort((a, b) => {
+      let valA = a[key];
+      let valB = b[key];
+
+      // Si es precio, conviértelo a número
+      if (key === 'precio_prod') {
+        valA = parseFloat(valA);
+        valB = parseFloat(valB);
+      }
+
+      // Comparación estándar
+      if (valA < valB) return direction === 'ascending' ? -1 : 1;
+      if (valA > valB) return direction === 'ascending' ?  1 : -1;
+      return 0;
+    });
+  };
+
   const requestSort = (key) => {
     let direction = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -139,6 +159,23 @@ const Menu = () => {
     });
 
     setFilteredProducts(sortedProducts);
+  };
+
+  const handleSortChange = (e) => {
+    const key = e.target.value;
+
+    // Guardamos el criterio elegido
+    setSelectedSortKey(key);
+    setSortConfig({ key, direction: 'ascending' });
+
+    // Cuando el usuario elige "—", mostramos la lista tal cual
+    if (!key) {
+      setFilteredProducts([...products]);
+      return;
+    }
+
+    const sorted = sortArray(filteredProducts, key, 'ascending');
+    setFilteredProducts(sorted);
   };
 
   const initiateAction = (actionType) => {
@@ -263,13 +300,14 @@ const Menu = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <div className="sort-buttons">
-                <button 
-                  onClick={() => requestSort('tipodeguardado')}
-                  className="sort-btn"
-                >
-                  Ordenar por Tipo
-                </button>
+              <div className="sort-select">
+                <select value={selectedSortKey} onChange={handleSortChange}>
+                  <option value="">— Ordenar por —</option>
+                  <option value="nombre_categ">Categoría</option>
+                  <option value="marca">Marca (A-Z)</option>
+                  <option value="nombre">Nombre (A-Z)</option>
+                  <option value="precio_prod">Precio</option>
+                </select>
               </div>
             </div>
 
@@ -291,7 +329,7 @@ const Menu = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((product) => (
+                  {filteredProducts.map((product) => (
                     <tr 
                       key={product.id_prod}
                       onClick={() => handleSelectProduct(product.id_prod)}

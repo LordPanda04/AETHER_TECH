@@ -546,3 +546,41 @@
     font-size: 14px;
   }
 }
+
+.sort-select select {
+  padding: 12px 18px;
+  background-color: #2196F3;        
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.3s;
+  appearance: none;             
+}
+
+.sort-select select:hover {
+  background-color: #0b7dda;        
+}
+
+.sort-select {
+  position: relative;               
+}
+
+.sort-select::after {
+  content: "▼";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #fff;
+  pointer-events: none;
+  font-size: 12px;
+}
+
+@media (max-width: 576px) {
+  .sort-select select {
+    width: 100%;
+  }
+}
