@@ -71,6 +71,83 @@ app.get('/api/lotes/:id_prod', (req, res) => {
   });
 });
 
+// Ruta para obtener todas las categorías
+app.get('/api/categorias', (req, res) => {
+  const query = 'SELECT * FROM categoria ORDER BY nombre_categ';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Error al obtener categorías' });
+    }
+    res.json(results);
+  });
+});
+
+// Ruta para agregar un nuevo producto
+app.post('/api/productos', (req, res) => {
+  const { id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod } = req.body;
+  
+  // Validación de campos
+  if (!id_prod || !nombre || !marca || !id_categ || !unid_medida || stock_prod === undefined || precio_prod === undefined) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  }
+
+  const query = `
+    INSERT INTO productos 
+    (id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod, activo, descrip) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, 1, '')
+  `;
+  
+  db.query(query, 
+    [id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod], 
+    (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Error al agregar producto' });
+      }
+      
+      // Devolver el producto completo con información de categoría
+      const queryComplete = `
+        SELECT p.*, c.nombre_categ 
+        FROM productos p
+        LEFT JOIN categoria c ON p.id_categ = c.id_categ
+        WHERE p.id_prod = ?
+      `;
+      
+      db.query(queryComplete, [id_prod], (err, productResult) => {
+        if (err || productResult.length === 0) {
+          console.error(err);
+          return res.status(500).json({ error: 'Error al recuperar producto insertado' });
+        }
+        
+        res.json(productResult[0]);
+      });
+    }
+  );
+});
+
+// Ruta para obtener el último ID de producto
+app.get('/api/productos/ultimo-id', (req, res) => {
+  const query = `
+    SELECT id_prod 
+    FROM productos 
+    ORDER BY 
+      CAST(SUBSTRING(id_prod, 5) AS UNSIGNED) DESC, 
+      id_prod DESC
+    LIMIT 1
+  `;
+  
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Error al obtener último ID de producto' });
+    }
+    
+    const ultimoId = results[0]?.id_prod || null;
+    res.json({ ultimoId });
+  });
+});
+
 // Iniciar servidor
 const PORT = 5000;
 app.listen(PORT, () => {
