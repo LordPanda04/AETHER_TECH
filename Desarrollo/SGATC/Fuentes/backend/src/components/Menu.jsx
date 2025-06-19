@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-//import productsData from './productsData';
 import './Menu.css';
 import metroLogo from '../images/METRO.png'; 
 
@@ -35,6 +34,8 @@ const Menu = () => {
   const [isLoadingCategorias, setIsLoadingCategorias] = useState(false);
   const [showLotesModal, setShowLotesModal] = useState(false);
   const [productoLotes, setProductoLotes] = useState([]);
+  const [selectedSortKey, setSelectedSortKey] = useState('');
+
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -73,6 +74,11 @@ const Menu = () => {
     setFilteredProducts(productsData);
     setIsLoading(false);
   }, []);*/
+
+    // Single or Double click const, sólo guarda cuál es la fila activa
+    const handleRowClick = (id_prod) => {
+      setSelectedProductId(id_prod);
+    };
 
   // Generar código consecutivo basado en el último producto
   const generateProductCode = async () => {
@@ -210,6 +216,24 @@ const Menu = () => {
     navigate('/login');
   };
 
+  const sortArray = (array, key, direction = 'ascending') => {
+    return [...array].sort((a, b) => {
+      let valA = a[key];
+      let valB = b[key];
+
+      // Si es precio, conviértelo a número
+      if (key === 'precio_prod') {
+        valA = parseFloat(valA);
+        valB = parseFloat(valB);
+      }
+
+      // Comparación estándar
+      if (valA < valB) return direction === 'ascending' ? -1 : 1;
+      if (valA > valB) return direction === 'ascending' ?  1 : -1;
+      return 0;
+    });
+  };
+
   const requestSort = (key) => {
     let direction = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -228,6 +252,23 @@ const Menu = () => {
     });
 
     setFilteredProducts(sortedProducts);
+  };
+
+  const handleSortChange = (e) => {
+    const key = e.target.value;
+
+    // Guardamos el criterio elegido
+    setSelectedSortKey(key);
+    setSortConfig({ key, direction: 'ascending' });
+
+    // Cuando el usuario elige "—", mostramos la lista tal cual
+    if (!key) {
+      setFilteredProducts([...products]);
+      return;
+    }
+
+    const sorted = sortArray(filteredProducts, key, 'ascending');
+    setFilteredProducts(sorted);
   };
 
   const initiateAction = (actionType) => {
@@ -256,31 +297,21 @@ const Menu = () => {
     }
   };
 
-  const handleSelectProduct = async (id_prod) => {
+  const handleShowLotes = async (id_prod) => {
     try {
       setSelectedProductId(id_prod);
-      
-      // Verificar primero si el producto existe
-      const product = products.find(p => p.id_prod === id_prod);
-      if (!product) {
-        throw new Error('Producto no encontrado');
-      }
+      const product = filteredProducts.find(p => p.id_prod === id_prod);
+      if (!product) throw new Error('Producto no encontrado');
 
       const response = await axios.get(`http://localhost:5000/api/lotes/${id_prod}`);
-      
-      if (!response.data) {
-        throw new Error('No se recibieron datos de lotes');
-      }
+      if (!response.data) throw new Error('No se recibieron datos de lotes');
 
       setProductoLotes(response.data);
+      setSelectedProduct(product); //Guarda el producto para usar en el modal
       setShowLotesModal(true);
-      
-    } catch (error) {
-      console.error('Error detallado:', {
-        error: error.message,
-        response: error.response?.data
-      });
-      alert(`Error al cargar lotes: ${error.message}`);
+    } catch (err) {
+      console.error(err);
+      alert(`Error al cargar lotes: ${err.message}`);
     }
   };
 
@@ -352,13 +383,14 @@ const Menu = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <div className="sort-buttons">
-                <button 
-                  onClick={() => requestSort('tipodeguardado')}
-                  className="sort-btn"
-                >
-                  Ordenar por Tipo
-                </button>
+              <div className="sort-select">
+                <select value={selectedSortKey} onChange={handleSortChange}>
+                  <option value="">— Ordenar por —</option>
+                  <option value="nombre_categ">Categoría</option>
+                  <option value="marca">Marca (A-Z)</option>
+                  <option value="nombre">Nombre (A-Z)</option>
+                  <option value="precio_prod">Precio</option>
+                </select>
               </div>
             </div>
 
@@ -381,15 +413,18 @@ const Menu = () => {
                 </thead>
                 <tbody>
                   {filteredProducts.map((product) => (
-                    <tr 
+                    <tr
                       key={product.id_prod}
-                      onClick={() => handleSelectProduct(product.id_prod)}
+                      /* 1-clic: sólo selecciona */
+                      onClick={() => handleRowClick(product.id_prod)}
+                      /* 2-clic: abre lotes (y de paso también queda seleccionado) */
+                      onDoubleClick={() => handleShowLotes(product.id_prod)}
                       className={selectedProductId === product.id_prod ? 'selected-row' : ''}
                     >
                       <td>{product.id_prod}</td>
                       <td>{product.nombre}</td>
                       <td>{product.marca}</td>
-                      <td>{product.nombre_categ}</td> {/* Desde JOIN con categoría */}
+                      <td>{product.nombre_categ}</td>
                       <td>{product.unid_medida}</td>
                       <td>{product.stock_prod}</td>
                       <td>S/.{Number(product.precio_prod).toFixed(2)}</td>
@@ -585,7 +620,8 @@ const Menu = () => {
         {showLotesModal && (
           <div className="modal-overlay">
             <div className="modal-container" style={{ maxWidth: '800px' }}>
-              <h3>Lotes del Producto: {products.find(p => p.id_prod === selectedProductId)?.nombre}</h3>
+              <h3>Lotes del Producto: {selectedProduct?.nombre || selectedProductId}</h3>
+
               
               <table className="products-table">
                 <thead>
@@ -614,7 +650,10 @@ const Menu = () => {
 
               <div className="modal-buttons">
                 <button 
-                  onClick={() => setShowLotesModal(false)}
+                  onClick={() => {
+                    setShowLotesModal(false);
+                    setSelectedProduct(null);
+                  }}
                   className="modal-cancel-btn"
                 >
                   Cerrar
