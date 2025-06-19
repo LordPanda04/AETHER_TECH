@@ -74,12 +74,16 @@ const Menu = () => {
   }, []);*/
 
   // Generar código consecutivo basado en el último producto
-  const generateConsecutiveCode = () => {
-    if (products.length === 0) return 'PROD-001';
-
-    const lastCode = products[products.length - 1].id_prod;  // Cambiado de codigo a id_prod
-    const number = parseInt(lastCode.split('-')[1]) + 1;
-    return `PROD-${number.toString().padStart(3, '0')}`;
+  const generateProductCode = () => {
+    if (products.length === 0) return 'PRD-001';
+    
+    // Encuentra el máximo código actual
+    const maxCode = products.reduce((max, product) => {
+      const currentNum = parseInt(product.id_prod.split('-')[1]);
+      return currentNum > max ? currentNum : max;
+    }, 0);
+    
+    return `PRD-${(maxCode + 1).toString().padStart(3, '0')}`;
   };
    
   useEffect(() => {
@@ -115,32 +119,50 @@ const Menu = () => {
     alert(`Producto reabastecido correctamente. Nueva cantidad: ${updatedProducts.find(p => p.id === id_prod).cantidad}`);
   };
 
-  const handleAddProduct = () => {
-    if (!newProduct.nombre || !newProduct.lote || !newProduct.tipodeguardado || newProduct.cantidad <= 0) {
+  const handleAddProduct = async () => {
+    // Validación de campos obligatorios
+    if (!newProduct.nombre || !newProduct.marca || !newProduct.id_categ || 
+        !newProduct.unid_medida || newProduct.stock_prod <= 0 || newProduct.precio_prod <= 0) {
       alert('Por favor complete todos los campos correctamente');
       return;
     }
 
-    const consecutiveCode = generateConsecutiveCode();
-    const productToAdd = {
-      id: products.length + 1,
-      codigo: consecutiveCode,
-      ...newProduct,
-      cantidad: parseInt(newProduct.cantidad)
-    };
+    try {
+      // Generar código automático
+      const productCode = generateProductCode();
+      
+      // Preparar datos para enviar
+      const productToAdd = {
+        ...newProduct,
+        id_prod: productCode
+      };
 
-    const updatedProducts = [...products, productToAdd];
-    setProducts(updatedProducts);
-    setFilteredProducts(updatedProducts);
-    setShowAddModal(false);
-    setNewProduct({
-      nombre: '',
-      lote: '',
-      fvencimiento: '---',
-      tipodeguardado: '',
-      cantidad: 0
-    });
-    alert(`Producto agregado correctamente con código: ${consecutiveCode}`);
+      // Enviar a la API
+      const response = await axios.post('http://localhost:5000/api/productos', productToAdd);
+      
+      // Actualizar estado local
+      const updatedProducts = [...products, response.data];
+      setProducts(updatedProducts);
+      setFilteredProducts(updatedProducts);
+      
+      // Cerrar modal y resetear formulario
+      setShowAddModal(false);
+      setNewProduct({
+        id_prod: '',
+        nombre: '',
+        marca: '',
+        id_categ: '',
+        unid_medida: '',
+        stock_prod: 0,
+        precio_prod: 0,
+        activo: 1
+      });
+      
+      alert(`Producto agregado correctamente con código: ${productCode}`);
+    } catch (error) {
+      console.error('Error al agregar producto:', error);
+      alert('Error al agregar producto');
+    }
   };
 
   const handleLogout = () => {
@@ -355,47 +377,76 @@ const Menu = () => {
                   value={newProduct.nombre}
                   onChange={(e) => setNewProduct({...newProduct, nombre: e.target.value})}
                   placeholder="Nombre del producto"
+                  required
                 />
               </div>
               
               <div className="form-group">
-                <label>Lote:</label>
+                <label>Marca:</label>
                 <input
                   type="text"
-                  value={newProduct.lote}
-                  onChange={(e) => setNewProduct({...newProduct, lote: e.target.value})}
-                  placeholder="Número de lote"
+                  value={newProduct.marca}
+                  onChange={(e) => setNewProduct({...newProduct, marca: e.target.value})}
+                  placeholder="Ej: Gloria"
+                  required
                 />
               </div>
               
               <div className="form-group">
-                <label>Fecha de Vencimiento:</label>
-                <input
-                  type="text"
-                  value={newProduct.fvencimiento}
-                  onChange={(e) => setNewProduct({...newProduct, fvencimiento: e.target.value})}
-                  placeholder="--- o DD/MM/AAAA"
-                />
+                <label>Categoría:</label>
+                <select
+                  value={newProduct.id_categ}
+                  onChange={(e) => setNewProduct({...newProduct, id_categ: e.target.value})}
+                  required
+                >
+                  <option value="">Seleccione categoría</option>
+                  {categorias.map(categoria => (
+                    <option key={categoria.id_categ} value={categoria.id_categ}>
+                      {categoria.nombre_categ}
+                    </option>
+                  ))}
+                </select>
               </div>
               
               <div className="form-group">
-                <label>Tipo de Guardado:</label>
-                <input
-                  type="text"
-                  value={newProduct.tipodeguardado}
-                  onChange={(e) => setNewProduct({...newProduct, tipodeguardado: e.target.value})}
-                  placeholder="Ej: Refrigerado, Seco, etc."
-                />
+                <label>Unidad de Medida:</label>
+                <select
+                  value={newProduct.unid_medida}
+                  onChange={(e) => setNewProduct({...newProduct, unid_medida: e.target.value})}
+                  required
+                >
+                  <option value="">Seleccione unidad</option>
+                  <option value="Caja">Caja</option>
+                  <option value="Sixpack">Sixpack</option>
+                  <option value="Bolsa">Bolsa</option>
+                  <option value="Paquete">Paquete</option>
+                  <option value="Frasco">Frasco</option>
+                  <option value="Botella">Botella</option>
+                  <option value="Lata">Lata</option>
+                  <option value="Por Kilo">Por Kilo</option>
+                </select>
               </div>
               
               <div className="form-group">
-                <label>Cantidad:</label>
+                <label>Stock:</label>
                 <input
                   type="number"
                   min="1"
-                  value={newProduct.cantidad}
-                  onChange={(e) => setNewProduct({...newProduct, cantidad: e.target.value})}
-                  placeholder="Cantidad inicial"
+                  value={newProduct.stock_prod}
+                  onChange={(e) => setNewProduct({...newProduct, stock_prod: parseInt(e.target.value) || 0})}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Precio Unitario (S/.):</label>
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={newProduct.precio_prod}
+                  onChange={(e) => setNewProduct({...newProduct, precio_prod: parseFloat(e.target.value) || 0})}
+                  required
                 />
               </div>
               
