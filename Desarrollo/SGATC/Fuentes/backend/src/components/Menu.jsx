@@ -54,6 +54,11 @@ const Menu = () => {
     setIsLoading(false);
   }, []);*/
 
+    // Single or Double click const, sólo guarda cuál es la fila activa
+    const handleRowClick = (id_prod) => {
+      setSelectedProductId(id_prod);
+    };
+
   // Generar código consecutivo basado en el último producto
   const generateConsecutiveCode = () => {
     if (products.length === 0) return 'PROD-001';
@@ -204,33 +209,27 @@ const Menu = () => {
     }
   };
 
-  const handleSelectProduct = async (id_prod) => {
+  const handleShowLotes = async (id_prod) => {
     try {
+      // 1) marca la fila como seleccionada (también sirve para Eliminar/Reabastecer)
       setSelectedProductId(id_prod);
-      
-      // Verificar primero si el producto existe
-      const product = products.find(p => p.id_prod === id_prod);
-      if (!product) {
-        throw new Error('Producto no encontrado');
-      }
 
+      // 2) verifica que exista
+      const product = products.find(p => p.id_prod === id_prod);
+      if (!product) throw new Error('Producto no encontrado');
+
+      // 3) consulta los lotes
       const response = await axios.get(`http://localhost:5000/api/lotes/${id_prod}`);
-      
-      if (!response.data) {
-        throw new Error('No se recibieron datos de lotes');
-      }
+      if (!response.data) throw new Error('No se recibieron datos de lotes');
 
       setProductoLotes(response.data);
       setShowLotesModal(true);
-      
-    } catch (error) {
-      console.error('Error detallado:', {
-        error: error.message,
-        response: error.response?.data
-      });
-      alert(`Error al cargar lotes: ${error.message}`);
+    } catch (err) {
+      console.error(err);
+      alert(`Error al cargar lotes: ${err.message}`);
     }
   };
+
 
   if (isLoading) {
     return <div className="loading">Cargando productos...</div>;
@@ -330,15 +329,18 @@ const Menu = () => {
                 </thead>
                 <tbody>
                   {filteredProducts.map((product) => (
-                    <tr 
+                    <tr
                       key={product.id_prod}
-                      onClick={() => handleSelectProduct(product.id_prod)}
+                      /* 1-clic: sólo selecciona */
+                      onClick={() => handleRowClick(product.id_prod)}
+                      /* 2-clic: abre lotes (y de paso también queda seleccionado) */
+                      onDoubleClick={() => handleShowLotes(product.id_prod)}
                       className={selectedProductId === product.id_prod ? 'selected-row' : ''}
                     >
                       <td>{product.id_prod}</td>
                       <td>{product.nombre}</td>
                       <td>{product.marca}</td>
-                      <td>{product.nombre_categ}</td> {/* Desde JOIN con categoría */}
+                      <td>{product.nombre_categ}</td>
                       <td>{product.unid_medida}</td>
                       <td>{product.stock_prod}</td>
                       <td>S/.{Number(product.precio_prod).toFixed(2)}</td>
