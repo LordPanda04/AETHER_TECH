@@ -133,35 +133,46 @@ const Menu = () => {
   };
 
   const handleAddProduct = async () => {
-    // Validación de campos (mantener la que ya tienes)
-    if (!newProduct.nombre.trim() || !newProduct.marca.trim() || !newProduct.id_categ || 
+    // Validación de campos
+    if (!newProduct.nombre || !newProduct.marca || !newProduct.id_categ || 
         !newProduct.unid_medida || newProduct.stock_prod <= 0 || newProduct.precio_prod <= 0) {
       alert('Por favor complete todos los campos correctamente');
       return;
     }
 
     try {
+      // Generar código automático
       const productCode = await generateProductCode();
+      
+      // Preparar datos para enviar
       const productToAdd = {
         ...newProduct,
         id_prod: productCode,
-        descrip: '', // Asegurar que tenga descripción
-        activo: 1,
-        nombre_categ: categorias.find(c => c.id_categ === parseInt(newProduct.id_categ))?.nombre_categ || ''
+        descrip: '', // Campo descripción vacío por defecto
+        activo: 1 // Producto activo por defecto
       };
 
-      const response = await axios.post('http://localhost:5000/api/productos', productToAdd);
+      // Enviar a la API
+      await axios.post('http://localhost:5000/api/productos', productToAdd);
       
-      // Asegurar que el producto agregado tenga todas las propiedades
-      const newProductWithAllFields = {
-        ...response.data,
-        nombre_categ: productToAdd.nombre_categ,
+      // Obtener la categoría completa para mostrar en la tabla
+      const categoriaCompleta = categorias.find(c => c.id_categ === parseInt(newProduct.id_categ));
+      
+      // Crear el objeto de producto completo para la tabla
+      const productoParaTabla = {
+        id_prod: productCode,
+        nombre: newProduct.nombre,
+        marca: newProduct.marca,
+        id_categ: newProduct.id_categ,
+        nombre_categ: categoriaCompleta?.nombre_categ || '',
         unid_medida: newProduct.unid_medida,
         stock_prod: newProduct.stock_prod,
-        precio_prod: newProduct.precio_prod
+        precio_prod: newProduct.precio_prod,
+        activo: 1
       };
 
-      const updatedProducts = [...products, newProductWithAllFields];
+      // Actualizar estado local
+      const updatedProducts = [...products, productoParaTabla];
       setProducts(updatedProducts);
       setFilteredProducts(updatedProducts);
       

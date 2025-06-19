@@ -85,31 +85,42 @@ app.get('/api/categorias', (req, res) => {
 
 // Ruta para agregar un nuevo producto
 app.post('/api/productos', (req, res) => {
-  const { id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod, activo } = req.body;
+  const { id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod } = req.body;
   
-  // Validación básica
+  // Validación de campos
   if (!id_prod || !nombre || !marca || !id_categ || !unid_medida || stock_prod === undefined || precio_prod === undefined) {
     return res.status(400).json({ error: 'Faltan campos obligatorios' });
   }
 
   const query = `
     INSERT INTO productos 
-    (id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod, activo) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    (id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod, activo, descrip) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, 1, '')
   `;
   
   db.query(query, 
-    [id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod, activo], 
+    [id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod], 
     (err, results) => {
       if (err) {
         console.error(err);
         return res.status(500).json({ error: 'Error al agregar producto' });
       }
-      res.json({ 
-        success: true, 
-        product: { 
-          id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod, activo 
-        } 
+      
+      // Devolver el producto completo con información de categoría
+      const queryComplete = `
+        SELECT p.*, c.nombre_categ 
+        FROM productos p
+        LEFT JOIN categoria c ON p.id_categ = c.id_categ
+        WHERE p.id_prod = ?
+      `;
+      
+      db.query(queryComplete, [id_prod], (err, productResult) => {
+        if (err || productResult.length === 0) {
+          console.error(err);
+          return res.status(500).json({ error: 'Error al recuperar producto insertado' });
+        }
+        
+        res.json(productResult[0]);
       });
     }
   );
