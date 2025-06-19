@@ -68,10 +68,15 @@ const Menu = () => {
   };
    
   useEffect(() => {
-    const results = products.filter(product =>
-      product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.id_prod.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const results = products.filter(product => {
+      const searchTermLower = searchTerm.toLowerCase();
+      return (
+        product.id_prod.toLowerCase().includes(searchTermLower) ||
+        product.nombre.toLowerCase().includes(searchTermLower) ||
+        (product.nombre_categ && product.nombre_categ.toLowerCase().includes(searchTermLower)) ||
+        product.unid_medida.toLowerCase().includes(searchTermLower)
+      );
+    });
     setFilteredProducts(results);
   }, [searchTerm, products]);
 
@@ -289,7 +294,7 @@ const Menu = () => {
               <div className="search-box">
                 <input
                   type="text"
-                  placeholder="Buscar por nombre, código o lote..."
+                  placeholder="Buscar por código, nombre, categoría o unidad..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
