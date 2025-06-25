@@ -9,7 +9,7 @@ app.use(express.json());
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root', // Cambia por tu usuario de MySQL
-  password: '1234', // Cambia por tu contraseña
+  password: 'GHMySQL22.11', // Cambia por tu contraseña
   database: 'SistemaGestorAlmacen',
   port: 3306,
 });
