@@ -19,6 +19,12 @@ const Menu = () => {
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showRestockModal, setShowRestockModal] = useState(false);
+  const [newLote, setNewLote] = useState({
+    id_lote: '',
+    cantidad_lote: 0,
+    fecha_caducidad: '',
+    id_prod: ''
+  });
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [restockQuantity, setRestockQuantity] = useState(10);
@@ -129,17 +135,6 @@ const Menu = () => {
     alert(`Producto eliminado correctamente`);
   };
 
-  const handleRestock = (id_prod, quantity) => {  // Cambiado de id a id_prod
-    const updatedProducts = products.map(product => 
-      product.id_prod === id_prod ? { ...product, stock_prod: product.stock_prod + quantity } : product
-    );
-    setProducts(updatedProducts);
-    setFilteredProducts(updatedProducts);
-    setSelectedProductId(null);
-    setShowRestockModal(false);
-    alert(`Producto reabastecido correctamente. Nueva cantidad: ${updatedProducts.find(p => p.id === id_prod).cantidad}`);
-  };
-
   const handleAddProduct = async () => {
     // Validación de campos
     if (!newProduct.nombre || !newProduct.marca || !newProduct.id_categ || 
@@ -208,6 +203,80 @@ const Menu = () => {
         } else if (error.response.status === 500) {
           errorMessage = 'Error en el servidor al intentar agregar el producto';
         }
+      }
+      
+      alert(errorMessage);
+    }
+  };
+
+  const handleRestock = async () => {
+    try {
+      // Validación mejorada
+      if (!newLote.id_lote?.trim()) {
+        alert('El ID del lote es requerido');
+        return;
+      }
+      if (newLote.cantidad_lote <= 0) {
+        alert('La cantidad debe ser mayor a 0');
+        return;
+      }
+      if (!newLote.fecha_caducidad) {
+        alert('La fecha de caducidad es requerida');
+        return;
+      }
+
+      console.log('Enviando datos:', newLote);
+
+      const response = await axios.post('http://localhost:5000/api/lotes', newLote, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Respuesta del servidor:', response.data);
+
+      // Actualizar el estado optimista
+      const updatedProducts = products.map(p => 
+        p.id_prod === newLote.id_prod 
+          ? { ...p, stock_prod: p.stock_prod + newLote.cantidad_lote }
+          : p
+      );
+
+      setProducts(updatedProducts);
+      setFilteredProducts(updatedProducts);
+      
+      // Actualizar lista de lotes
+      const lotesRes = await axios.get(`http://localhost:5000/api/lotes/${newLote.id_prod}`);
+      setProductoLotes(lotesRes.data);
+
+      // Cerrar y resetear
+      setShowRestockModal(false);
+      setNewLote({
+        id_lote: '',
+        cantidad_lote: 10,
+        fecha_caducidad: '',
+        id_prod: selectedProductId // Mantener el id_prod para futuros reabastecimientos
+      });
+
+      alert('¡Lote agregado correctamente!');
+
+    } catch (error) {
+      console.error("Detalles del error:", {
+        requestData: newLote,  // Muestra los datos enviados
+        response: error.response?.data
+      });
+      
+      let errorMessage = 'Error al reabastecer';
+      if (error.response) {
+        if (error.response.status === 404) {
+          errorMessage = 'Producto no encontrado';
+        } else if (error.response.status === 409) {
+          errorMessage = 'El ID de lote ya existe';
+        } else {
+          errorMessage += `: ${error.response.data?.error || error.response.statusText}`;
+        }
+      } else {
+        errorMessage += `: ${error.message}`;
       }
       
       alert(errorMessage);
@@ -284,17 +353,19 @@ const Menu = () => {
       return;
     }
     
-    const product = products.find(p => p.id === selectedProductId);
+    const product = products.find(p => p.id_prod === selectedProductId);
     setSelectedProduct(product);
     
     if (actionType === 'delete') {
       setShowDeleteModal(true);
     } else {
-      if (product.fvencimiento !== "---") {
-        alert('No se puede reabastecer producto con fecha de vencimiento definida');
-        return;
-      }
-      setRestockQuantity(10);
+      // Configuración para reabastecer
+      setNewLote({
+        id_lote: '',
+        cantidad_lote: 10,
+        fecha_caducidad: '',
+        id_prod: selectedProductId // Se establece automáticamente
+      });
       setShowRestockModal(true);
     }
   };
@@ -599,36 +670,52 @@ const Menu = () => {
         {showRestockModal && (
           <div className="modal-overlay">
             <div className="modal-container">
-              <h3>Confirmar Reabastecimiento</h3>
-              <p>¿Deseas reabastecer el producto: <strong>{selectedProduct.nombre}</strong>?</p>
-              <p>Código: {selectedProduct.codigo} | Lote: {selectedProduct.lote}</p>
-              <p>Cantidad actual: {selectedProduct.cantidad}</p>
+              <h3>Reabastecer Producto</h3>
+              <p>Producto: <strong>{selectedProduct?.nombre}</strong></p>
+              <p>Código: <strong>{selectedProduct?.id_prod}</strong></p>
               
-              <div className="restock-input-container">
-                <label>Cantidad a agregar:</label>
+              <div className="form-group">
+                <label>ID Lote:</label>
+                <input
+                  type="text"
+                  value={newLote.id_lote}
+                  onChange={(e) => setNewLote({...newLote, id_lote: e.target.value})}
+                  placeholder="Ej: LOTE-001"
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Cantidad:</label>
                 <input
                   type="number"
                   min="1"
-                  value={restockQuantity}
-                  onChange={(e) => setRestockQuantity(parseInt(e.target.value) || 0)}
+                  value={newLote.cantidad_lote}
+                  onChange={(e) => setNewLote({...newLote, cantidad_lote: parseInt(e.target.value) || 0})}
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Fecha de Caducidad:</label>
+                <input
+                  type="date"
+                  value={newLote.fecha_caducidad}
+                  onChange={(e) => setNewLote({...newLote, fecha_caducidad: e.target.value})}
+                  required
+                  min={new Date().toISOString().split('T')[0]} // Fecha mínima hoy
                 />
               </div>
               
               <div className="modal-buttons">
                 <button 
-                  onClick={() => {
-                    if (restockQuantity > 0) {
-                      handleRestock(selectedProduct.id, restockQuantity);
-                    } else {
-                      alert('Por favor ingrese una cantidad válida mayor a cero');
-                    }
-                  }} 
+                  onClick={handleRestock}
                   className="modal-confirm-btn restock-btn"
                 >
                   Confirmar Reabastecimiento
                 </button>
                 <button 
-                  onClick={() => setShowRestockModal(false)} 
+                  onClick={() => setShowRestockModal(false)}
                   className="modal-cancel-btn"
                 >
                   Cancelar
