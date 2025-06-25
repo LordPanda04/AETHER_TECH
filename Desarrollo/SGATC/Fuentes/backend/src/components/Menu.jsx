@@ -49,8 +49,12 @@ const Menu = () => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/productos');
-        setProducts(response.data);
-        setFilteredProducts(response.data);
+        // Ordenar los productos por id_prod (código) de forma ascendente
+        const sortedProducts = response.data.sort((a, b) => 
+          a.id_prod.localeCompare(b.id_prod)
+        );
+        setProducts(sortedProducts);
+        setFilteredProducts(sortedProducts);
       } catch (error) {
         console.error('Error al cargar productos:', error);
         alert('Error al cargar productos');
