@@ -27,6 +27,7 @@ const Menu = () => {
   });
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [sortOrder, setSortOrder] = useState('asc'); // 'asc' o 'desc'
   const [restockQuantity, setRestockQuantity] = useState(10);
   const [newProduct, setNewProduct] = useState({
     id_prod: '', // Se generará automáticamente
@@ -309,20 +310,34 @@ const Menu = () => {
     });
   };
 
+  // Función para cambiar el orden
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    if (sortConfig.key) {
+      const sorted = sortArray(filteredProducts, sortConfig.key, sortOrder === 'asc' ? 'descending' : 'ascending');
+      setFilteredProducts(sorted);
+    }
+  };
+
+  // Modifica la función requestSort para considerar el sortOrder:
   const requestSort = (key) => {
     let direction = 'ascending';
-    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
+    if (sortConfig.key === key) {
+      direction = sortConfig.direction === 'ascending' ? 'descending' : 'ascending';
     }
     setSortConfig({ key, direction });
 
     const sortedProducts = [...filteredProducts].sort((a, b) => {
-      if (a[key] < b[key]) {
-        return direction === 'ascending' ? -1 : 1;
+      let valA = a[key];
+      let valB = b[key];
+
+      if (key === 'precio_prod') {
+        valA = parseFloat(valA);
+        valB = parseFloat(valB);
       }
-      if (a[key] > b[key]) {
-        return direction === 'ascending' ? 1 : -1;
-      }
+
+      if (valA < valB) return direction === 'ascending' ? -1 : 1;
+      if (valA > valB) return direction === 'ascending' ? 1 : -1;
       return 0;
     });
 
@@ -466,14 +481,27 @@ const Menu = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <div className="sort-select">
-                <select value={selectedSortKey} onChange={handleSortChange}>
-                  <option value="">— Ordenar por —</option>
-                  <option value="nombre_categ">Categoría</option>
-                  <option value="marca">Marca (A-Z)</option>
-                  <option value="nombre">Nombre (A-Z)</option>
-                  <option value="precio_prod">Precio</option>
-                </select>
+              <div className="sort-options-container">
+                <div className="sort-select-wrapper">
+                  <select 
+                    value={selectedSortKey} 
+                    onChange={handleSortChange}
+                    className="sort-select"
+                  >
+                    <option value="id_prod">Por Código</option>
+                    <option value="nombre">Por Nombre</option>
+                    <option value="marca">Por Marca</option>
+                    <option value="nombre_categ">Por Categoría</option>
+                    <option value="precio_prod">Por Precio</option>
+                  </select>
+                  <button 
+                    onClick={toggleSortOrder}
+                    className="sort-order-btn"
+                    aria-label={`Orden ${sortOrder === 'asc' ? 'ascendente' : 'descendente'}`}
+                  >
+                    {sortOrder === 'asc' ? '↑' : '↓'}
+                  </button>
+                </div>
               </div>
             </div>
 

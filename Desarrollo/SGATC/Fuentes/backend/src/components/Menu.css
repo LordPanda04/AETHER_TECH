@@ -283,26 +283,71 @@
   outline: none;
 }
 
-.sort-buttons {
+/* Contenedor principal de opciones de orden */
+.sort-options-container {
   display: flex;
-  gap: 12px;
+  align-items: center;
 }
 
-.sort-btn {
+/* Contenedor que agrupa el select y el botón */
+.sort-select-wrapper {
+  display: flex;
+  align-items: center;
+  background-color: #2196F3;
+  border-radius: 5px;
+  overflow: hidden; /* Para que el borde radius se aplique correctamente */
+}
+
+/* Estilo del select */
+.sort-select {
   padding: 12px 18px;
   background-color: #2196F3;
   color: white;
   border: none;
-  border-radius: 5px;
-  cursor: pointer;
   font-weight: bold;
-  transition: all 0.3s ease;
   font-size: 15px;
+  cursor: pointer;
+  appearance: none;
+  min-width: 150px;
+  height: 100%;
+  outline: none;
 }
 
-.sort-btn:hover {
+/* Quitamos el borde derecho del select para integración visual */
+.sort-select {
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Botón de orden */
+.sort-order-btn {
+  padding: 0 15px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.sort-order-btn:hover {
   background-color: #0b7dda;
-  transform: translateY(-2px);
+}
+
+/* Flecha indicadora */
+.sort-order-btn::after {
+  content: '';
+  display: inline-block;
+  margin-left: 5px;
+}
+
+/* Efecto para todo el contenedor al pasar el mouse */
+.sort-select-wrapper:hover {
+  background-color: #0b7dda;
 }
 
 /* Estilos para la tabla de lotes dentro del modal */
