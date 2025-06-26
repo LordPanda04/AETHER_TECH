@@ -258,7 +258,7 @@ const Menu = () => {
       setShowRestockModal(false);
       setNewLote({
         id_lote: '',
-        cantidad_lote: 10,
+        cantidad_lote: '',
         fecha_caducidad: '',
         id_prod: selectedProductId // Mantener el id_prod para futuros reabastecimientos
       });
@@ -381,7 +381,7 @@ const Menu = () => {
       // Configuración para reabastecer
       setNewLote({
         id_lote: '',
-        cantidad_lote: 10,
+        cantidad_lote: '',
         fecha_caducidad: '',
         id_prod: selectedProductId // Se establece automáticamente
       });
@@ -712,7 +712,7 @@ const Menu = () => {
                   type="text"
                   value={newLote.id_lote}
                   onChange={(e) => setNewLote({...newLote, id_lote: e.target.value})}
-                  placeholder="Ej: LOTE-001"
+                  placeholder="ID de Lote"
                   required
                 />
               </div>
@@ -722,8 +722,9 @@ const Menu = () => {
                 <input
                   type="number"
                   min="1"
-                  value={newLote.cantidad_lote}
-                  onChange={(e) => setNewLote({...newLote, cantidad_lote: parseInt(e.target.value) || 0})}
+                  value={newLote.cantidad_lote || ''}
+                  onChange={(e) => setNewLote({...newLote, cantidad_lote: parseInt(e.target.value)})}
+                  placeholder="Cantidad de Lote"
                   required
                 />
               </div>
