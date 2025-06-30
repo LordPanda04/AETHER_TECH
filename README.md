@@ -31,7 +31,7 @@ Aquí es donde puedes listar a los miembros de la empresa y su rol:
 - **Leonardo Panta** - Jefe de Proyecto
 - **Rodrigo Davalos** - Arquitecto de Software
 - **Alexander Villanueva** - Desarrollador Backend
-- **Jose Limachi** - Desarrollador Frontend
+- **Jose Limachi** - Administrador de Base de Datos
 - **Gabriel Uscamayta** - Diseñador y Tester
 
 ## 📫 Contáctanos

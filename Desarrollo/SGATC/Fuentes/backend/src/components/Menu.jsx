@@ -19,8 +19,15 @@ const Menu = () => {
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showRestockModal, setShowRestockModal] = useState(false);
+  const [newLote, setNewLote] = useState({
+    id_lote: '',
+    cantidad_lote: 0,
+    fecha_caducidad: '',
+    id_prod: ''
+  });
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [sortOrder, setSortOrder] = useState('asc'); // 'asc' o 'desc'
   const [restockQuantity, setRestockQuantity] = useState(10);
   const [newProduct, setNewProduct] = useState({
     id_prod: '', // Se generará automáticamente
@@ -43,8 +50,12 @@ const Menu = () => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/productos');
-        setProducts(response.data);
-        setFilteredProducts(response.data);
+        // Ordenar los productos por id_prod (código) de forma ascendente
+        const sortedProducts = response.data.sort((a, b) => 
+          a.id_prod.localeCompare(b.id_prod)
+        );
+        setProducts(sortedProducts);
+        setFilteredProducts(sortedProducts);
       } catch (error) {
         console.error('Error al cargar productos:', error);
         alert('Error al cargar productos');
@@ -174,17 +185,6 @@ const exportToExcel = async () => {
     alert(`Producto eliminado correctamente`);
   };
 
-  const handleRestock = (id_prod, quantity) => {  // Cambiado de id a id_prod
-    const updatedProducts = products.map(product => 
-      product.id_prod === id_prod ? { ...product, stock_prod: product.stock_prod + quantity } : product
-    );
-    setProducts(updatedProducts);
-    setFilteredProducts(updatedProducts);
-    setSelectedProductId(null);
-    setShowRestockModal(false);
-    alert(`Producto reabastecido correctamente. Nueva cantidad: ${updatedProducts.find(p => p.id === id_prod).cantidad}`);
-  };
-
   const handleAddProduct = async () => {
     // Validación de campos
     if (!newProduct.nombre || !newProduct.marca || !newProduct.id_categ || 
@@ -259,6 +259,80 @@ const exportToExcel = async () => {
     }
   };
 
+  const handleRestock = async () => {
+    try {
+      // Validación mejorada
+      if (!newLote.id_lote?.trim()) {
+        alert('El ID del lote es requerido');
+        return;
+      }
+      if (newLote.cantidad_lote <= 0) {
+        alert('La cantidad debe ser mayor a 0');
+        return;
+      }
+      if (!newLote.fecha_caducidad) {
+        alert('La fecha de caducidad es requerida');
+        return;
+      }
+
+      console.log('Enviando datos:', newLote);
+
+      const response = await axios.post('http://localhost:5000/api/lotes', newLote, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Respuesta del servidor:', response.data);
+
+      // Actualizar el estado optimista
+      const updatedProducts = products.map(p => 
+        p.id_prod === newLote.id_prod 
+          ? { ...p, stock_prod: p.stock_prod + newLote.cantidad_lote }
+          : p
+      );
+
+      setProducts(updatedProducts);
+      setFilteredProducts(updatedProducts);
+      
+      // Actualizar lista de lotes
+      const lotesRes = await axios.get(`http://localhost:5000/api/lotes/${newLote.id_prod}`);
+      setProductoLotes(lotesRes.data);
+
+      // Cerrar y resetear
+      setShowRestockModal(false);
+      setNewLote({
+        id_lote: '',
+        cantidad_lote: '',
+        fecha_caducidad: '',
+        id_prod: selectedProductId // Mantener el id_prod para futuros reabastecimientos
+      });
+
+      alert('¡Lote agregado correctamente!');
+
+    } catch (error) {
+      console.error("Detalles del error:", {
+        requestData: newLote,  // Muestra los datos enviados
+        response: error.response?.data
+      });
+      
+      let errorMessage = 'Error al reabastecer';
+      if (error.response) {
+        if (error.response.status === 404) {
+          errorMessage = 'Producto no encontrado';
+        } else if (error.response.status === 409) {
+          errorMessage = 'El ID de lote ya existe';
+        } else {
+          errorMessage += `: ${error.response.data?.error || error.response.statusText}`;
+        }
+      } else {
+        errorMessage += `: ${error.message}`;
+      }
+      
+      alert(errorMessage);
+    }
+  };
+
   const handleLogout = () => {
     navigate('/login');
   };
@@ -281,20 +355,34 @@ const exportToExcel = async () => {
     });
   };
 
+  // Función para cambiar el orden
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    if (sortConfig.key) {
+      const sorted = sortArray(filteredProducts, sortConfig.key, sortOrder === 'asc' ? 'descending' : 'ascending');
+      setFilteredProducts(sorted);
+    }
+  };
+
+  // Modifica la función requestSort para considerar el sortOrder:
   const requestSort = (key) => {
     let direction = 'ascending';
-    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
+    if (sortConfig.key === key) {
+      direction = sortConfig.direction === 'ascending' ? 'descending' : 'ascending';
     }
     setSortConfig({ key, direction });
 
     const sortedProducts = [...filteredProducts].sort((a, b) => {
-      if (a[key] < b[key]) {
-        return direction === 'ascending' ? -1 : 1;
+      let valA = a[key];
+      let valB = b[key];
+
+      if (key === 'precio_prod') {
+        valA = parseFloat(valA);
+        valB = parseFloat(valB);
       }
-      if (a[key] > b[key]) {
-        return direction === 'ascending' ? 1 : -1;
-      }
+
+      if (valA < valB) return direction === 'ascending' ? -1 : 1;
+      if (valA > valB) return direction === 'ascending' ? 1 : -1;
       return 0;
     });
 
@@ -329,17 +417,19 @@ const exportToExcel = async () => {
       return;
     }
     
-    const product = products.find(p => p.id === selectedProductId);
+    const product = products.find(p => p.id_prod === selectedProductId);
     setSelectedProduct(product);
     
     if (actionType === 'delete') {
       setShowDeleteModal(true);
     } else {
-      if (product.fvencimiento !== "---") {
-        alert('No se puede reabastecer producto con fecha de vencimiento definida');
-        return;
-      }
-      setRestockQuantity(10);
+      // Configuración para reabastecer
+      setNewLote({
+        id_lote: '',
+        cantidad_lote: '',
+        fecha_caducidad: '',
+        id_prod: selectedProductId // Se establece automáticamente
+      });
       setShowRestockModal(true);
     }
   };
@@ -443,14 +533,27 @@ const exportToExcel = async () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <div className="sort-select">
-                <select value={selectedSortKey} onChange={handleSortChange}>
-                  <option value="">— Ordenar por —</option>
-                  <option value="nombre_categ">Categoría</option>
-                  <option value="marca">Marca (A-Z)</option>
-                  <option value="nombre">Nombre (A-Z)</option>
-                  <option value="precio_prod">Precio</option>
-                </select>
+              <div className="sort-options-container">
+                <div className="sort-select-wrapper">
+                  <select 
+                    value={selectedSortKey} 
+                    onChange={handleSortChange}
+                    className="sort-select"
+                  >
+                    <option value="id_prod">Por Código</option>
+                    <option value="nombre">Por Nombre</option>
+                    <option value="marca">Por Marca</option>
+                    <option value="nombre_categ">Por Categoría</option>
+                    <option value="precio_prod">Por Precio</option>
+                  </select>
+                  <button 
+                    onClick={toggleSortOrder}
+                    className="sort-order-btn"
+                    aria-label={`Orden ${sortOrder === 'asc' ? 'ascendente' : 'descendente'}`}
+                  >
+                    {sortOrder === 'asc' ? '↑' : '↓'}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -651,36 +754,53 @@ const exportToExcel = async () => {
         {showRestockModal && (
           <div className="modal-overlay">
             <div className="modal-container">
-              <h3>Confirmar Reabastecimiento</h3>
-              <p>¿Deseas reabastecer el producto: <strong>{selectedProduct.nombre}</strong>?</p>
-              <p>Código: {selectedProduct.codigo} | Lote: {selectedProduct.lote}</p>
-              <p>Cantidad actual: {selectedProduct.cantidad}</p>
+              <h3>Reabastecer Producto</h3>
+              <p>Producto: <strong>{selectedProduct?.nombre}</strong></p>
+              <p>Código: <strong>{selectedProduct?.id_prod}</strong></p>
               
-              <div className="restock-input-container">
-                <label>Cantidad a agregar:</label>
+              <div className="form-group">
+                <label>ID Lote:</label>
+                <input
+                  type="text"
+                  value={newLote.id_lote}
+                  onChange={(e) => setNewLote({...newLote, id_lote: e.target.value})}
+                  placeholder="ID de Lote"
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Cantidad:</label>
                 <input
                   type="number"
                   min="1"
-                  value={restockQuantity}
-                  onChange={(e) => setRestockQuantity(parseInt(e.target.value) || 0)}
+                  value={newLote.cantidad_lote || ''}
+                  onChange={(e) => setNewLote({...newLote, cantidad_lote: parseInt(e.target.value)})}
+                  placeholder="Cantidad de Lote"
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Fecha de Caducidad:</label>
+                <input
+                  type="date"
+                  value={newLote.fecha_caducidad}
+                  onChange={(e) => setNewLote({...newLote, fecha_caducidad: e.target.value})}
+                  required
+                  min={new Date().toISOString().split('T')[0]} // Fecha mínima hoy
                 />
               </div>
               
               <div className="modal-buttons">
                 <button 
-                  onClick={() => {
-                    if (restockQuantity > 0) {
-                      handleRestock(selectedProduct.id, restockQuantity);
-                    } else {
-                      alert('Por favor ingrese una cantidad válida mayor a cero');
-                    }
-                  }} 
+                  onClick={handleRestock}
                   className="modal-confirm-btn restock-btn"
                 >
                   Confirmar Reabastecimiento
                 </button>
                 <button 
-                  onClick={() => setShowRestockModal(false)} 
+                  onClick={() => setShowRestockModal(false)}
                   className="modal-cancel-btn"
                 >
                   Cancelar
