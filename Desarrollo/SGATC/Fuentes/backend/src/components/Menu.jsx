@@ -115,6 +115,51 @@ const Menu = () => {
       return `PRD-${(products.length + 1).toString().padStart(3, '0')}`;
     }
   };
+
+  // Agrega esta función dentro del componente Menu, antes del return
+const exportToExcel = async () => {
+  try {
+    // Obtener los datos completos de la API (incluyendo descripción que no se muestra en la tabla)
+    const response = await axios.get('http://localhost:5000/api/productos/completos');
+    const productosCompletos = response.data;
+
+    // Crear el contenido CSV
+    const headers = [
+      'Código', 'Nombre', 'Marca', 'Descripción', 'Categoría', 
+      'Unidad de Medida', 'Stock', 'Precio (S/.)', 'Estado'
+    ].join(',');
+
+    const rows = productosCompletos.map(producto => [
+      producto.id_prod,
+      `"${producto.nombre}"`, // Entre comillas por si contiene comas
+      `"${producto.marca}"`,
+      `"${producto.descrip || 'Sin descripción'}"`,
+      `"${producto.nombre_categ}"`,
+      producto.unid_medida,
+      producto.stock_prod,
+      Number(producto.precio_prod).toFixed(2),
+      producto.activo ? 'Activo' : 'Inactivo'
+    ].join(','));
+
+    const csvContent = [headers, ...rows].join('\n');
+
+    // Crear el archivo y descargarlo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `productos_${new Date().toISOString().slice(0,10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+  } catch (error) {
+    console.error('Error al exportar a Excel:', error);
+    alert('Error al generar el archivo de exportación');
+  }
+};
+
    
   useEffect(() => {
     const results = products.filter(product => {
@@ -457,6 +502,13 @@ const Menu = () => {
             Estadísticas
           </button>
           
+          <button 
+            onClick={exportToExcel}
+            className="side-menu-btn export-btn"
+          >
+            Exportar a Excel
+          </button>
+
           <button 
             onClick={handleLogout} 
             className="side-menu-btn logout-btn"
