@@ -762,8 +762,14 @@ const Menu = () => {
         {showLotesModal && (
           <div className="modal-overlay">
             <div className="modal-container" style={{ maxWidth: '800px' }}>
-              <h3>Lotes del Producto: {selectedProduct?.nombre || selectedProductId}</h3>
-
+              <div className="product-header">
+                <h3>Lotes del Producto: {selectedProduct?.nombre || selectedProductId}</h3>
+                {selectedProduct && (
+                  <div className="product-total-price">
+                    Precio Total: S/.{(selectedProduct.stock_prod * selectedProduct.precio_prod).toFixed(2)}
+                  </div>
+                )}
+              </div>
               
               <table className="products-table">
                 <thead>
@@ -804,6 +810,7 @@ const Menu = () => {
             </div>
           </div>
         )}
+        
         {/* Modal para eliminar lotes */}
         {showEliminarLotes && (
           <EliminarLotes
