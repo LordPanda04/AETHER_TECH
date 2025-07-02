@@ -143,7 +143,7 @@ const Menu = () => {
   const handleAddProduct = async () => {
     // Validación de campos
     if (!newProduct.nombre || !newProduct.marca || !newProduct.id_categ || 
-        !newProduct.unid_medida || newProduct.stock_prod <= 0 || newProduct.precio_prod <= 0) {
+        !newProduct.unid_medida || newProduct.precio_prod <= 0) {
       alert('Por favor complete todos los campos correctamente');
       return;
     }
@@ -618,7 +618,7 @@ const Menu = () => {
                 </select>
               </div>
               
-              <div className="form-group">
+              {/**<div className="form-group">
                 <label>Stock:</label>
                 <input
                   type="number"
@@ -634,7 +634,7 @@ const Menu = () => {
                   required
                   placeholder="Stock del producto"
                 />
-              </div>
+              </div>*/}
 
               <div className="form-group">
                 <label>Precio Unitario (S/.):</label>
