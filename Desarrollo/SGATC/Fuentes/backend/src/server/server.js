@@ -9,7 +9,7 @@ app.use(express.json());
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root', // Cambia por tu usuario de MySQL
-  password: 'GHMySQL22.11', // Cambia por tu contraseña
+  password: 'root', // Cambia por tu contraseña
   database: 'SistemaGestorAlmacen',
   port: 3306,
 });
@@ -82,6 +82,25 @@ app.get('/api/categorias', (req, res) => {
     res.json(results);
   });
 });
+
+// Ruta para lo de exportar tabla
+
+app.get('/api/productos/completos', (req, res) => {
+  const query = `
+    SELECT p.*, c.nombre_categ 
+    FROM productos p
+    JOIN categoria c ON p.id_categ = c.id_categ
+  `;
+  
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Error al obtener productos completos' });
+    }
+    res.json(results);
+  });
+});
+
 
 // Ruta para agregar un nuevo producto
 app.post('/api/productos', (req, res) => {
