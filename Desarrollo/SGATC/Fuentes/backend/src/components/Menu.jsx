@@ -116,49 +116,75 @@ const Menu = () => {
     }
   };
 
-  // Agrega esta función dentro del componente Menu, antes del return
-const exportToExcel = async () => {
-  try {
-    // Obtener los datos completos de la API (incluyendo descripción que no se muestra en la tabla)
-    const response = await axios.get('http://localhost:5000/api/productos/completos');
-    const productosCompletos = response.data;
+  // funcion exportar excel
+    const exportToExcel = async () => {
+    try {
+      // 1. Obtener datos
+      const response = await axios.get('http://localhost:5000/api/productos/completos');
+      const productos = response.data;
 
-    // Crear el contenido CSV
-    const headers = [
-      'Código', 'Nombre', 'Marca', 'Descripción', 'Categoría', 
-      'Unidad de Medida', 'Stock', 'Precio (S/.)', 'Estado'
-    ].join(',');
+      // 2. Configuración para Excel
+      const delimiter = ';'; // Excel en español usa punto y coma
+      const lineBreak = '\r\n'; // Salto de línea para Windows
+      const textWrapper = '"'; // Envolver cada texto en comillas
 
-    const rows = productosCompletos.map(producto => [
-      producto.id_prod,
-      `"${producto.nombre}"`, // Entre comillas por si contiene comas
-      `"${producto.marca}"`,
-      `"${producto.descrip || 'Sin descripción'}"`,
-      `"${producto.nombre_categ}"`,
-      producto.unid_medida,
-      producto.stock_prod,
-      Number(producto.precio_prod).toFixed(2),
-      producto.activo ? 'Activo' : 'Inactivo'
-    ].join(','));
+      // 3. Formatear encabezados
+      const headers = [
+        'Código', 'Nombre', 'Marca', 'Descripción', 
+        'Categoría', 'Unidad de Medida', 'Stock', 
+        'Precio (S/.)', 'Estado'
+      ].map(header => `${textWrapper}${header}${textWrapper}`).join(delimiter);
 
-    const csvContent = [headers, ...rows].join('\n');
+      // 4. Formatear filas de datos
+      const rows = productos.map(producto => {
+        // Procesar cada campo individualmente
+        const fields = [
+          producto.id_prod?.toString() || '', // Código
+          producto.nombre || '', // Nombre
+          producto.marca || '', // Marca
+          producto.descrip || 'Sin descripción', // Descripción
+          producto.nombre_categ || '', // Categoría
+          producto.unid_medida || '', // Unidad
+          producto.stock_prod?.toString() || '0', // Stock
+          Number(producto.precio_prod || 0).toFixed(2).replace('.', ','), // Precio
+          producto.activo ? 'Activo' : 'Inactivo' // Estado
+        ];
+        
+        // Envolver cada campo en comillas y unir con delimitador
+        return fields.map(field => {
+          // Escapar comillas existentes y envolver en comillas
+          const escapedValue = String(field).replace(/"/g, '""');
+          return `${textWrapper}${escapedValue}${textWrapper}`;
+        }).join(delimiter);
+      });
 
-    // Crear el archivo y descargarlo
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `productos_${new Date().toISOString().slice(0,10)}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      // 5. Crear contenido CSV
+      const csvContent = [
+        '\uFEFF', // BOM para UTF-8
+        headers,
+        ...rows
+      ].join(lineBreak);
 
-  } catch (error) {
-    console.error('Error al exportar a Excel:', error);
-    alert('Error al generar el archivo de exportación');
-  }
-};
+      // 6. Descargar archivo
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Productos_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Limpieza
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
+
+    } catch (error) {
+      console.error('Error al exportar:', error);
+      alert('Error al generar el archivo. Verifique la consola para más detalles.');
+    }
+  };
 
    
   useEffect(() => {
@@ -499,14 +525,14 @@ const exportToExcel = async () => {
             onClick={() => navigate('/estadisticas')}
             className="side-menu-btn stats-btn"
           >
-            Estadísticas
+            Reportes
           </button>
           
           <button 
             onClick={exportToExcel}
             className="side-menu-btn export-btn"
           >
-            Exportar a Excel
+            Exportar Tabla
           </button>
 
           <button 

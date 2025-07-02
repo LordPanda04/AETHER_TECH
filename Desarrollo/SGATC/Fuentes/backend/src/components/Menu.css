@@ -36,14 +36,6 @@
   overflow-y: auto;
 }
 
-.export-btn {
-  background-color: #120eda;
-  color: white;
-}
-
-.export-btn:hover {
-  background-color: #040e91;
-}
 
 /* Logo y título */
 .logo-container {
@@ -160,14 +152,25 @@
 }
 
 .stats-btn {
-  background-color: #9c27b0;
+  background-color: #d60af1;
   margin-bottom: 15px;
 }
 
 .stats-btn:hover {
-  background-color: #7b1fa2;
+  background-color: #d408b2;
   transform: translateY(-3px);
   box-shadow: 0 5px 10px rgba(156, 39, 176, 0.3);
+}
+
+.export-btn {
+  background-color: #07d6c5;
+  margin-bottom: 15px;
+}
+
+.export-btn:hover {
+  background-color: #13929b;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(5, 218, 218, 0.3);
 }
 
 .logout-btn {
