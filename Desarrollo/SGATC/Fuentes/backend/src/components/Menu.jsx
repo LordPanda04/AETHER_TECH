@@ -230,29 +230,17 @@ const Menu = () => {
         return;
       }
 
-      console.log('Enviando datos:', newLote);
+      // 1. Enviar el nuevo lote al servidor
+      await axios.post('http://localhost:5000/api/lotes', newLote);
 
-      const response = await axios.post('http://localhost:5000/api/lotes', newLote, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      console.log('Respuesta del servidor:', response.data);
-
-      // Actualizar el estado optimista
-      const updatedProducts = products.map(p => 
-        p.id_prod === newLote.id_prod 
-          ? { ...p, stock_prod: p.stock_prod + newLote.cantidad_lote }
-          : p
-      );
-
-      setProducts(updatedProducts);
-      setFilteredProducts(updatedProducts);
+      // 2. Obtener los productos actualizados
+      const productsResponse = await axios.get('http://localhost:5000/api/productos');
+      setProducts(productsResponse.data);
+      setFilteredProducts(productsResponse.data);
       
-      // Actualizar lista de lotes
-      const lotesRes = await axios.get(`http://localhost:5000/api/lotes/${newLote.id_prod}`);
-      setProductoLotes(lotesRes.data);
+      // 3. Obtener los lotes actualizados para el modal
+      const lotesResponse = await axios.get(`http://localhost:5000/api/lotes/${newLote.id_prod}`);
+      setProductoLotes(lotesResponse.data);
 
       // Cerrar y resetear
       setShowRestockModal(false);
@@ -260,16 +248,13 @@ const Menu = () => {
         id_lote: '',
         cantidad_lote: '',
         fecha_caducidad: '',
-        id_prod: selectedProductId // Mantener el id_prod para futuros reabastecimientos
+        id_prod: selectedProductId
       });
 
       alert('¡Lote agregado correctamente!');
 
     } catch (error) {
-      console.error("Detalles del error:", {
-        requestData: newLote,  // Muestra los datos enviados
-        response: error.response?.data
-      });
+      console.error("Detalles del error:", error);
       
       let errorMessage = 'Error al reabastecer';
       if (error.response) {
@@ -816,7 +801,13 @@ const Menu = () => {
           <EliminarLotes
             productId={selectedProductId}
             productName={products.find(p => p.id_prod === selectedProductId)?.nombre}
-            onClose={() => setShowEliminarLotes(false)}
+            onClose={(updatedProducts) => {
+              if (updatedProducts) {
+                setProducts(updatedProducts);
+                setFilteredProducts(updatedProducts);
+              }
+              setShowEliminarLotes(false);
+            }}
           />
         )}
       </div>

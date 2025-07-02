@@ -40,7 +40,8 @@ app.post('/api/login', (req, res) => {
 // Ruta para obtener productos con categorías
 app.get('/api/productos', (req, res) => {
   const query = `
-    SELECT p.*, c.nombre_categ 
+    SELECT p.*, c.nombre_categ, 
+    (SELECT SUM(cantidad_lote) FROM lote WHERE id_prod = p.id_prod) AS stock_calculado
     FROM productos p
     JOIN categoria c ON p.id_categ = c.id_categ
     WHERE p.activo = 1
