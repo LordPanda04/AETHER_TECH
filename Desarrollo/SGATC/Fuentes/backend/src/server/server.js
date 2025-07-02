@@ -374,6 +374,23 @@ app.post('/api/productos/actualizar-stocks', async (req, res) => {
   }
 });
 
+app.get('/api/lotes-reporte', async (req, res) => {
+  try {
+    const query = `
+      SELECT l.*, p.nombre as producto_nombre
+      FROM lote l
+      LEFT JOIN productos p ON l.id_prod = p.id_prod
+      ORDER BY l.fecha_ingreso DESC, l.id_lote
+    `;
+    
+    const [results] = await db.promise().query(query);
+    res.json(results);
+  } catch (err) {
+    console.error('Error al obtener reporte de lotes:', err);
+    res.status(500).json({ error: 'Error al generar reporte' });
+  }
+});
+
 // Iniciar servidor
 const PORT = 5000;
 app.listen(PORT, () => {

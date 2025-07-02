@@ -164,7 +164,10 @@ const EliminarLotes = ({ productId, productName, onClose }) => {
           </table>
         )}
 
-        <button onClick={onClose} className="modal-cancel-btn">
+        <button 
+          onClick={() => onClose()} // Solo llamamos a onClose sin parámetros
+          className="modal-cancel-btn"
+        >
           Cerrar
         </button>
       </div>

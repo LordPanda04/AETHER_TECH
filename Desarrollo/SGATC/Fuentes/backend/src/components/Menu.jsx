@@ -499,10 +499,10 @@ const exportToExcel = async () => {
           </button>
 
           <button 
-            onClick={() => navigate('/estadisticas')}
+            onClick={() => navigate('/reportes')}
             className="side-menu-btn stats-btn"
           >
-            Estadísticas
+            <i className="fas fa-chart-bar"></i> Estadísticas
           </button>
           
           <button 
