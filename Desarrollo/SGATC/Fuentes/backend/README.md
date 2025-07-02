@@ -20,7 +20,16 @@
    ```bash
    npm start
    ```
-4. Si falla:
+4. En otra terminal ejecuta el comando:
+   ```bash
+   cd Desarrollo/SGATC/fuentes/backend/src/server
+   ```
+5. Ejecuta el server:
+   ```bash
+   node server.js
+   ```
+
+4. Si falla(afuera de la carpeta server):
    ```bash
    npm install react react-dom
    npm install --save-dev react-scripts
