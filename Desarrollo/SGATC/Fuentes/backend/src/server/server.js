@@ -14,6 +14,38 @@ const db = mysql.createConnection({
   port: 3306,
 });
 
+// Justo después de crear la conexión a la base de datos
+db.connect(async (err) => {
+  if (err) {
+    console.error('Error conectando a MySQL:', err);
+    return;
+  }
+  console.log('Conectado a MySQL');
+
+  // Actualizar todos los stocks al iniciar
+  try {
+    const [productos] = await db.promise().query(
+      'SELECT id_prod FROM productos WHERE activo = 1'
+    );
+
+    for (const producto of productos) {
+      await db.promise().query(
+        `UPDATE productos 
+         SET stock_prod = (
+           SELECT COALESCE(SUM(cantidad_lote), 0) 
+           FROM lote 
+           WHERE id_prod = ?
+         )
+         WHERE id_prod = ?`,
+        [producto.id_prod, producto.id_prod]
+      );
+    }
+    console.log(`Stocks actualizados al iniciar para ${productos.length} productos`);
+  } catch (err) {
+    console.error('Error al actualizar stocks al iniciar:', err);
+  }
+});
+
 // Middlewares
 app.use(cors()); // Permite peticiones desde React
 app.use(express.json()); // Para leer datos JSON del frontend
@@ -37,22 +69,67 @@ app.post('/api/login', (req, res) => {
   });
 });
 
-// Ruta para obtener productos con categorías
-app.get('/api/productos', (req, res) => {
-  const query = `
-    SELECT p.*, c.nombre_categ, 
-    (SELECT SUM(cantidad_lote) FROM lote WHERE id_prod = p.id_prod) AS stock_calculado
-    FROM productos p
-    JOIN categoria c ON p.id_categ = c.id_categ
-    WHERE p.activo = 1
-  `;
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Error al obtener productos' });
-    }
+// Ruta modificada para obtener productos (siempre con stock calculado)
+app.get('/api/productos', async (req, res) => {
+  try {
+    const [results] = await db.promise().query(`
+      SELECT 
+        p.*, 
+        c.nombre_categ,
+        (SELECT COALESCE(SUM(l.cantidad_lote), 0) 
+         FROM lote l WHERE l.id_prod = p.id_prod) AS stock_prod
+      FROM productos p
+      JOIN categoria c ON p.id_categ = c.id_categ
+      WHERE p.activo = 1
+    `);
     res.json(results);
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener productos' });
+  }
+});
+
+// Modificar la ruta POST /api/productos para no aceptar stock_prod del frontend
+app.post('/api/productos', (req, res) => {
+  const { id_prod, nombre, marca, id_categ, unid_medida, precio_prod } = req.body;
+  
+  // Validación de campos (quitamos stock_prod de las validaciones)
+  if (!id_prod || !nombre || !marca || !id_categ || !unid_medida || precio_prod === undefined) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  }
+
+  const query = `
+    INSERT INTO productos 
+    (id_prod, nombre, marca, id_categ, unid_medida, stock_prod, precio_prod, activo, descrip) 
+    VALUES (?, ?, ?, ?, ?, 0, ?, 1, '')
+  `;
+  
+  db.query(query, 
+    [id_prod, nombre, marca, id_categ, unid_medida, precio_prod], 
+    (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Error al agregar producto' });
+      }
+      
+      // Devolver el producto completo con información de categoría
+      const queryComplete = `
+        SELECT p.*, c.nombre_categ 
+        FROM productos p
+        LEFT JOIN categoria c ON p.id_categ = c.id_categ
+        WHERE p.id_prod = ?
+      `;
+      
+      db.query(queryComplete, [id_prod], (err, productResult) => {
+        if (err || productResult.length === 0) {
+          console.error(err);
+          return res.status(500).json({ error: 'Error al recuperar producto insertado' });
+        }
+        
+        res.json(productResult[0]);
+      });
+    }
+  );
 });
 
 // Nueva ruta para obtener lotes por producto
@@ -128,7 +205,6 @@ app.post('/api/productos', (req, res) => {
 });
 
 // Ruta para agregar un nuevo lote
-// server.js
 app.post('/api/lotes', async (req, res) => {
   const { id_lote, cantidad_lote, fecha_caducidad, id_prod } = req.body;
 
@@ -146,40 +222,28 @@ app.post('/api/lotes', async (req, res) => {
   }
 
   try {
-    // 1. Verificar que el producto existe
-    const [producto] = await db.promise().query(
-      'SELECT id_prod FROM productos WHERE id_prod = ? AND activo = 1', 
-      [id_prod]
-    );
-
-    if (producto.length === 0) {
-      console.error(`Producto no encontrado: ${id_prod}`);
-      return res.status(404).json({ 
-        error: 'Producto no encontrado',
-        id_prod_recibido: id_prod,
-      });
-    }
-
-    // 2. Insertar el lote
-    const [result] = await db.promise().query(
-      `INSERT INTO lote 
-       (id_lote, cantidad_lote, fecha_caducidad, id_prod) 
-       VALUES (?, ?, ?, ?)`,
+    // 1. Insertar el lote
+    await db.promise().query(
+      `INSERT INTO lote (id_lote, cantidad_lote, fecha_caducidad, id_prod, fecha_ingreso)
+       VALUES (?, ?, ?, ?, CURDATE())`,
       [id_lote, cantidad_lote, fecha_caducidad, id_prod]
     );
 
-    // 3. Actualizar stock
+    // 2. Actualizar stock del producto
     await db.promise().query(
       `UPDATE productos 
-       SET stock_prod = stock_prod + ? 
+       SET stock_prod = (
+         SELECT COALESCE(SUM(cantidad_lote), 0) 
+         FROM lote 
+         WHERE id_prod = ?
+       )
        WHERE id_prod = ?`,
-      [cantidad_lote, id_prod]
+      [id_prod, id_prod]
     );
 
     res.json({ 
-      success: true, 
-      message: 'Lote creado y stock actualizado',
-      id_lote: id_lote
+      success: true,
+      message: 'Lote agregado y stock actualizado'
     });
 
   } catch (err) {
@@ -223,21 +287,92 @@ app.get('/api/productos/ultimo-id', (req, res) => {
 });
 
 //Ruta para eliminar lote
-app.delete('/api/lotes/:id_lote', (req, res) => {
+app.delete('/api/lotes/:id_lote', async (req, res) => {
   const { id_lote } = req.params;
-  const sql = 'DELETE FROM lote WHERE id_lote = ?';
-  db.query(sql, [id_lote], (err, result) => {
-    if (err) {
-      console.error('Error al eliminar lote:', err);
-      return res.status(500).json({ success: false, error: 'Error del servidor' });
+  
+  try {
+    // 1. Obtener el producto asociado al lote
+    const [lote] = await db.promise().query(
+      'SELECT id_prod FROM lote WHERE id_lote = ?',
+      [id_lote]
+    );
+
+    if (lote.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Lote no encontrado' 
+      });
     }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, error: 'Lote no encontrado' });
-    }
-    res.json({ success: true });
-  });
+
+    const id_prod = lote[0].id_prod;
+
+    // 2. Eliminar el lote
+    await db.promise().query(
+      'DELETE FROM lote WHERE id_lote = ?',
+      [id_lote]
+    );
+
+    // 3. Actualizar stock del producto
+    await db.promise().query(
+      `UPDATE productos 
+       SET stock_prod = (
+         SELECT COALESCE(SUM(cantidad_lote), 0) 
+         FROM lote 
+         WHERE id_prod = ?
+       )
+       WHERE id_prod = ?`,
+      [id_prod, id_prod]
+    );
+
+    res.json({ 
+      success: true,
+      message: 'Lote eliminado y stock actualizado'
+    });
+  } catch (err) {
+    console.error('Error al eliminar lote:', err);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error del servidor' 
+    });
+  }
 });
 
+// Ruta para actualizar stocks - server.js
+app.post('/api/productos/actualizar-stocks', async (req, res) => {
+  try {
+    const [productos] = await db.promise().query(
+      'SELECT id_prod FROM productos WHERE activo = 1'
+    );
+
+    let actualizados = 0;
+    for (const producto of productos) {
+      await db.promise().query(
+        `UPDATE productos 
+         SET stock_prod = (
+           SELECT COALESCE(SUM(cantidad_lote), 0) 
+           FROM lote 
+           WHERE id_prod = ?
+         )
+         WHERE id_prod = ?`,
+        [producto.id_prod, producto.id_prod]
+      );
+      actualizados++;
+    }
+
+    res.json({
+      success: true,
+      message: `Stocks actualizados para ${actualizados} productos`,
+      count: actualizados
+    });
+  } catch (err) {
+    console.error('Error al actualizar stocks:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Error al actualizar stocks',
+      details: err.message
+    });
+  }
+});
 
 // Iniciar servidor
 const PORT = 5000;
