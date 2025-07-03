@@ -22,7 +22,7 @@
 }
 
 .fecha-titulo {
-  color: #e12213;
+  color: #7b1fa2;
   margin-bottom: 20px;
   font-size: 1.4rem;
   border-bottom: 2px solid #f0f0f0;
@@ -37,7 +37,7 @@
 }
 
 .reportes-table th {
-  background: linear-gradient(135deg, #e12213, #c11a0f);
+  background: linear-gradient(135deg, #9c27b0, #7b1fa2);
   color: white;
   padding: 12px 15px;
   text-align: left;
@@ -92,7 +92,7 @@
 /* Estilo para el total por fecha */
 .total-fecha {
   float: right;
-  background-color: #e12213;
+  background-color: #9c27b0;
   color: white;
   padding: 5px 15px;
   border-radius: 20px;
