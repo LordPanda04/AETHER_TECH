@@ -41,8 +41,8 @@ const Reportes = () => {
         datasets: [{
         label: 'Total Ingresado por Fecha',
         data: [],
-        backgroundColor: '#9c27b0',
-        borderColor: '#7b1fa2',
+        backgroundColor: '#e12213',
+        borderColor: '#c11a0f',
         borderWidth: 1
         }]
     };

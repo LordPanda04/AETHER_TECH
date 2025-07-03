@@ -22,7 +22,7 @@
 }
 
 .fecha-titulo {
-  color: #7b1fa2;
+  color: #c11a0f;
   margin-bottom: 20px;
   font-size: 1.4rem;
   border-bottom: 2px solid #f0f0f0;
@@ -37,7 +37,7 @@
 }
 
 .reportes-table th {
-  background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+  background: linear-gradient(135deg, #e12213, #c11a0f);
   color: white;
   padding: 12px 15px;
   text-align: left;
@@ -59,14 +59,14 @@
 
 /* Botón de volver */
 .back-btn {
-  background-color: #9c27b0;
+  background-color: #e12213;
   margin-bottom: 15px;
 }
 
 .back-btn:hover {
-  background-color: #7b1fa2;
+  background-color: #c11a0f;
   transform: translateY(-3px);
-  box-shadow: 0 5px 10px rgba(156, 39, 176, 0.3);
+  box-shadow: 0 5px 10px rgba(255, 68, 68, 0.3);
 }
 
 /* Mensaje sin datos */
@@ -92,7 +92,7 @@
 /* Estilo para el total por fecha */
 .total-fecha {
   float: right;
-  background-color: #9c27b0;
+  background-color: #e12213;
   color: white;
   padding: 5px 15px;
   border-radius: 20px;
