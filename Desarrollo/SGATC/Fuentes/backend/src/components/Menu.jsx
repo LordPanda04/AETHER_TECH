@@ -446,25 +446,6 @@ const exportToExcel = async () => {
       <div className="menu-container">
         {/* Menú lateral */}
         <div className="side-menu">
-          <button 
-            onClick={async () => {
-              if (window.confirm('¿Estás seguro de actualizar todos los stocks?')) {
-                try {
-                  const response = await axios.post(
-                    'http://localhost:5000/api/productos/actualizar-stocks'
-                  );
-                  alert(`✅ ${response.data.message}`);
-                  // Refrescar productos...
-                } catch (error) {
-                  console.error('Error completo:', error);
-                  alert(`❌ Error: ${error.response?.data?.error || error.message}`);
-                }
-              }
-            }}
-          >
-            Actualizar Stocks
-          </button>
-
           <div className="logo-container">
             <img src={metroLogo} alt="Logo Metro" className="metro-logo" />
           </div>
@@ -502,9 +483,30 @@ const exportToExcel = async () => {
             onClick={() => navigate('/reportes')}
             className="side-menu-btn stats-btn"
           >
-            <i className="fas fa-chart-bar"></i> Estadísticas
+            Reportes Reabastecimiento
           </button>
           
+          
+          {/* Botón Actualizar Stocks - Nuevo estilo */}
+          <button 
+            onClick={async () => {
+              if (window.confirm('¿Estás seguro de actualizar todos los stocks?')) {
+                try {
+                  const response = await axios.post('http://localhost:5000/api/productos/actualizar-stocks');
+                  alert(`✅ ${response.data.message}`);
+                  const productsResponse = await axios.get('http://localhost:5000/api/productos');
+                  setProducts(productsResponse.data);
+                  setFilteredProducts(productsResponse.data);
+                } catch (error) {
+                  alert(`❌ Error: ${error.response?.data?.error || error.message}`);
+                }
+              }
+            }}
+            className="side-menu-btn update-btn"
+          >
+            Actualizar Stocks
+          </button>
+
           <button 
             onClick={exportToExcel}
             className="side-menu-btn export-btn"

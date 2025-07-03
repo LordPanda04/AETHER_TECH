@@ -170,6 +170,17 @@
   box-shadow: 0 5px 10px rgba(156, 39, 176, 0.3);
 }
 
+.update-btn {
+  background-color: #ff9100;
+  margin-bottom: 15px;
+}
+
+.update-btn:hover {
+  background-color: #ff9100;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(255, 157, 0, 0.123);
+}
+
 .logout-btn {
   background-color: #e12213;
   margin-top: auto;

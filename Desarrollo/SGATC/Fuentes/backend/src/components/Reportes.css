@@ -59,12 +59,14 @@
 
 /* Botón de volver */
 .back-btn {
-  background-color: #6c757d;
-  color: white;
+  background-color: #9c27b0;
+  margin-bottom: 15px;
 }
 
 .back-btn:hover {
-  background-color: #5a6268;
+  background-color: #7b1fa2;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(156, 39, 176, 0.3);
 }
 
 /* Mensaje sin datos */
