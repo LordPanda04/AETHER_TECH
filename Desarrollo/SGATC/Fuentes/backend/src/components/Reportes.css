@@ -1,0 +1,114 @@
+/* Estructura principal */
+.reportes-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-image: url('../images/fondometro.jpeg');
+  font-family: 'Arial', sans-serif;
+}
+
+/* Contenedor de reportes */
+.reportes-content {
+  padding: 20px;
+}
+
+.reporte-fecha {
+  margin-bottom: 40px;
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.fecha-titulo {
+  color: #c11a0f;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+/* Tabla de reportes */
+.reportes-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.reportes-table th {
+  background: linear-gradient(135deg, #e12213, #c11a0f);
+  color: white;
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.reportes-table td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.reportes-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.reportes-table tr:hover {
+  background-color: rgba(225, 34, 19, 0.05);
+}
+
+/* Botón de volver */
+.back-btn {
+  background-color: #e12213;
+  margin-bottom: 15px;
+}
+
+.back-btn:hover {
+  background-color: #c11a0f;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(255, 68, 68, 0.3);
+}
+
+/* Mensaje sin datos */
+.no-data {
+  text-align: center;
+  padding: 30px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  color: #6c757d;
+  font-size: 18px;
+  border: 1px dashed #ddd;
+}
+
+/* Estilos para el gráfico */
+.chart-container {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo para el total por fecha */
+.total-fecha {
+  float: right;
+  background-color: #e12213;
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.9em;
+}
+
+/* Mejoras de responsive */
+@media (max-width: 768px) {
+  .fecha-titulo {
+    font-size: 1.2rem;
+  }
+  
+  .total-fecha {
+    float: none;
+    display: block;
+    margin-top: 10px;
+    width: fit-content;
+  }
+}

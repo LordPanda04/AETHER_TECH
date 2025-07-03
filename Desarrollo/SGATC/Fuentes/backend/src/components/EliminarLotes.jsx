@@ -51,6 +51,11 @@ const EliminarLotes = ({ productId, productName, onClose }) => {
         prev.filter((l) => l.id_lote !== confirmData.id_lote)
       );
       setConfirmData(null);   // volvemos a lista
+
+      // Actualizar la lista de productos en el componente padre
+      const response = await axios.get('http://localhost:5000/api/productos');
+      onClose(response.data); // Modificamos onClose para recibir datos actualizados
+
     } catch (err) {
       alert('No se pudo eliminar el lote');
       console.error(err);
@@ -159,9 +164,14 @@ const EliminarLotes = ({ productId, productName, onClose }) => {
           </table>
         )}
 
-        <button onClick={onClose} className="modal-cancel-btn">
-          Cerrar
-        </button>
+        <div className="modal-buttons" style={{ justifyContent: 'center' }}>
+          <button 
+            onClick={() => onClose()}
+            className="modal-cancel-btn"
+          >
+            Cerrar
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 import axios from 'axios'; // Asegúrate de instalarlo: npm install axios
 import Login from './components/Login';
 import Menu from './components/Menu'; // Asegúrate de crear este componente
+import Reportes from './components/Reportes'; // Asegúrate que la ruta sea correcta
 import metroLogo from './images/METRO.png';
 
 const App = () => {
@@ -11,6 +12,7 @@ const App = () => {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/menu" element={<PrivateRoute><Menu /></PrivateRoute>} />
+        <Route path="/reportes" element={<PrivateRoute><Reportes /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

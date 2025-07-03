@@ -116,75 +116,49 @@ const Menu = () => {
     }
   };
 
-  // funcion exportar excel
-    const exportToExcel = async () => {
-    try {
-      // 1. Obtener datos
-      const response = await axios.get('http://localhost:5000/api/productos/completos');
-      const productos = response.data;
+  // Agrega esta función dentro del componente Menu, antes del return
+const exportToExcel = async () => {
+  try {
+    // Obtener los datos completos de la API (incluyendo descripción que no se muestra en la tabla)
+    const response = await axios.get('http://localhost:5000/api/productos/completos');
+    const productosCompletos = response.data;
 
-      // 2. Configuración para Excel
-      const delimiter = ';'; // Excel en español usa punto y coma
-      const lineBreak = '\r\n'; // Salto de línea para Windows
-      const textWrapper = '"'; // Envolver cada texto en comillas
+    // Crear el contenido CSV
+    const headers = [
+      'Código', 'Nombre', 'Marca', 'Descripción', 'Categoría', 
+      'Unidad de Medida', 'Stock', 'Precio (S/.)', 'Estado'
+    ].join(',');
 
-      // 3. Formatear encabezados
-      const headers = [
-        'Código', 'Nombre', 'Marca', 'Descripción', 
-        'Categoría', 'Unidad de Medida', 'Stock', 
-        'Precio (S/.)', 'Estado'
-      ].map(header => `${textWrapper}${header}${textWrapper}`).join(delimiter);
+    const rows = productosCompletos.map(producto => [
+      producto.id_prod,
+      `"${producto.nombre}"`, // Entre comillas por si contiene comas
+      `"${producto.marca}"`,
+      `"${producto.descrip || 'Sin descripción'}"`,
+      `"${producto.nombre_categ}"`,
+      producto.unid_medida,
+      producto.stock_prod,
+      Number(producto.precio_prod).toFixed(2),
+      producto.activo ? 'Activo' : 'Inactivo'
+    ].join(','));
 
-      // 4. Formatear filas de datos
-      const rows = productos.map(producto => {
-        // Procesar cada campo individualmente
-        const fields = [
-          producto.id_prod?.toString() || '', // Código
-          producto.nombre || '', // Nombre
-          producto.marca || '', // Marca
-          producto.descrip || 'Sin descripción', // Descripción
-          producto.nombre_categ || '', // Categoría
-          producto.unid_medida || '', // Unidad
-          producto.stock_prod?.toString() || '0', // Stock
-          Number(producto.precio_prod || 0).toFixed(2).replace('.', ','), // Precio
-          producto.activo ? 'Activo' : 'Inactivo' // Estado
-        ];
-        
-        // Envolver cada campo en comillas y unir con delimitador
-        return fields.map(field => {
-          // Escapar comillas existentes y envolver en comillas
-          const escapedValue = String(field).replace(/"/g, '""');
-          return `${textWrapper}${escapedValue}${textWrapper}`;
-        }).join(delimiter);
-      });
+    const csvContent = [headers, ...rows].join('\n');
 
-      // 5. Crear contenido CSV
-      const csvContent = [
-        '\uFEFF', // BOM para UTF-8
-        headers,
-        ...rows
-      ].join(lineBreak);
+    // Crear el archivo y descargarlo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `productos_${new Date().toISOString().slice(0,10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-      // 6. Descargar archivo
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Productos_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      
-      // Limpieza
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 100);
-
-    } catch (error) {
-      console.error('Error al exportar:', error);
-      alert('Error al generar el archivo. Verifique la consola para más detalles.');
-    }
-  };
+  } catch (error) {
+    console.error('Error al exportar a Excel:', error);
+    alert('Error al generar el archivo de exportación');
+  }
+};
 
    
   useEffect(() => {
@@ -214,7 +188,7 @@ const Menu = () => {
   const handleAddProduct = async () => {
     // Validación de campos
     if (!newProduct.nombre || !newProduct.marca || !newProduct.id_categ || 
-        !newProduct.unid_medida || newProduct.stock_prod <= 0 || newProduct.precio_prod <= 0) {
+        !newProduct.unid_medida || newProduct.precio_prod <= 0) {
       alert('Por favor complete todos los campos correctamente');
       return;
     }
@@ -245,7 +219,7 @@ const Menu = () => {
         id_categ: newProduct.id_categ,
         nombre_categ: categoriaCompleta?.nombre_categ || '',
         unid_medida: newProduct.unid_medida,
-        stock_prod: newProduct.stock_prod,
+        stock_prod: 0, // Inicializamos en 0 porque no tiene lotes aún
         precio_prod: newProduct.precio_prod,
         activo: 1
       };
@@ -263,7 +237,6 @@ const Menu = () => {
         marca: '',
         id_categ: '',
         unid_medida: '',
-        stock_prod: 0,
         precio_prod: 0,
         activo: 1
       });
@@ -301,29 +274,17 @@ const Menu = () => {
         return;
       }
 
-      console.log('Enviando datos:', newLote);
+      // 1. Enviar el nuevo lote al servidor
+      await axios.post('http://localhost:5000/api/lotes', newLote);
 
-      const response = await axios.post('http://localhost:5000/api/lotes', newLote, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      console.log('Respuesta del servidor:', response.data);
-
-      // Actualizar el estado optimista
-      const updatedProducts = products.map(p => 
-        p.id_prod === newLote.id_prod 
-          ? { ...p, stock_prod: p.stock_prod + newLote.cantidad_lote }
-          : p
-      );
-
-      setProducts(updatedProducts);
-      setFilteredProducts(updatedProducts);
+      // 2. Obtener los productos actualizados
+      const productsResponse = await axios.get('http://localhost:5000/api/productos');
+      setProducts(productsResponse.data);
+      setFilteredProducts(productsResponse.data);
       
-      // Actualizar lista de lotes
-      const lotesRes = await axios.get(`http://localhost:5000/api/lotes/${newLote.id_prod}`);
-      setProductoLotes(lotesRes.data);
+      // 3. Obtener los lotes actualizados para el modal
+      const lotesResponse = await axios.get(`http://localhost:5000/api/lotes/${newLote.id_prod}`);
+      setProductoLotes(lotesResponse.data);
 
       // Cerrar y resetear
       setShowRestockModal(false);
@@ -331,16 +292,13 @@ const Menu = () => {
         id_lote: '',
         cantidad_lote: '',
         fecha_caducidad: '',
-        id_prod: selectedProductId // Mantener el id_prod para futuros reabastecimientos
+        id_prod: selectedProductId
       });
 
       alert('¡Lote agregado correctamente!');
 
     } catch (error) {
-      console.error("Detalles del error:", {
-        requestData: newLote,  // Muestra los datos enviados
-        response: error.response?.data
-      });
+      console.error("Detalles del error:", error);
       
       let errorMessage = 'Error al reabastecer';
       if (error.response) {
@@ -522,17 +480,38 @@ const Menu = () => {
           </button>
 
           <button 
-            onClick={() => navigate('/estadisticas')}
+            onClick={() => navigate('/reportes')}
             className="side-menu-btn stats-btn"
           >
-            Reportes
+            Reportes Reabastecimiento
           </button>
           
+          
+          {/* Botón Actualizar Stocks - Nuevo estilo */}
+          <button 
+            onClick={async () => {
+              if (window.confirm('¿Estás seguro de actualizar todos los stocks?')) {
+                try {
+                  const response = await axios.post('http://localhost:5000/api/productos/actualizar-stocks');
+                  alert(`✅ ${response.data.message}`);
+                  const productsResponse = await axios.get('http://localhost:5000/api/productos');
+                  setProducts(productsResponse.data);
+                  setFilteredProducts(productsResponse.data);
+                } catch (error) {
+                  alert(`❌ Error: ${error.response?.data?.error || error.message}`);
+                }
+              }
+            }}
+            className="side-menu-btn update-btn"
+          >
+            Actualizar Stocks
+          </button>
+
           <button 
             onClick={exportToExcel}
             className="side-menu-btn export-btn"
           >
-            Exportar Tabla
+            Exportar a Excel
           </button>
 
           <button 
@@ -696,7 +675,7 @@ const Menu = () => {
                 </select>
               </div>
               
-              <div className="form-group">
+              {/**<div className="form-group">
                 <label>Stock:</label>
                 <input
                   type="number"
@@ -712,7 +691,7 @@ const Menu = () => {
                   required
                   placeholder="Stock del producto"
                 />
-              </div>
+              </div>*/}
 
               <div className="form-group">
                 <label>Precio Unitario (S/.):</label>
@@ -840,8 +819,14 @@ const Menu = () => {
         {showLotesModal && (
           <div className="modal-overlay">
             <div className="modal-container" style={{ maxWidth: '800px' }}>
-              <h3>Lotes del Producto: {selectedProduct?.nombre || selectedProductId}</h3>
-
+              <div className="product-header">
+                <h3>Lotes del Producto: {selectedProduct?.nombre || selectedProductId}</h3>
+                {selectedProduct && (
+                  <div className="product-total-price">
+                    Precio Total: S/.{(selectedProduct.stock_prod * selectedProduct.precio_prod).toFixed(2)}
+                  </div>
+                )}
+              </div>
               
               <table className="products-table">
                 <thead>
@@ -882,12 +867,19 @@ const Menu = () => {
             </div>
           </div>
         )}
+        
         {/* Modal para eliminar lotes */}
         {showEliminarLotes && (
           <EliminarLotes
             productId={selectedProductId}
             productName={products.find(p => p.id_prod === selectedProductId)?.nombre}
-            onClose={() => setShowEliminarLotes(false)}
+            onClose={(updatedProducts) => {
+              if (updatedProducts) {
+                setProducts(updatedProducts);
+                setFilteredProducts(updatedProducts);
+              }
+              setShowEliminarLotes(false);
+            }}
           />
         )}
       </div>
