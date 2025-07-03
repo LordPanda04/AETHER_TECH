@@ -77,3 +77,36 @@
   font-size: 18px;
   border: 1px dashed #ddd;
 }
+
+/* Estilos para el gráfico */
+.chart-container {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo para el total por fecha */
+.total-fecha {
+  float: right;
+  background-color: #e12213;
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.9em;
+}
+
+/* Mejoras de responsive */
+@media (max-width: 768px) {
+  .fecha-titulo {
+    font-size: 1.2rem;
+  }
+  
+  .total-fecha {
+    float: none;
+    display: block;
+    margin-top: 10px;
+    width: fit-content;
+  }
+}
