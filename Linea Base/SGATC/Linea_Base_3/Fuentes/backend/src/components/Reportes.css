@@ -1,0 +1,138 @@
+/* Estructura principal */
+.reportes-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-image: url('../images/fondometro.jpeg');
+  background-size: cover;
+  background-position: center;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Contenedor de reportes */
+.reportes-content {
+  padding: 24px;
+  max-width: 1200px;
+  width: 100%;
+}
+
+/* Contenedor por fecha */
+.reporte-fecha {
+  margin-bottom: 40px;
+  background-color: white;
+  border-radius: 12px;
+  padding: 25px 30px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
+}
+.reporte-fecha:hover {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.fecha-titulo {
+  color: #c11a0f;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.06);
+}
+
+/* Tabla de reportes */
+.reportes-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-size: 15px;
+}
+
+.reportes-table th {
+  background: linear-gradient(135deg, #e12213, #c11a0f);
+  color: white;
+  padding: 13px 16px;
+  text-align: left;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.reportes-table td {
+  padding: 11px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+
+.reportes-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.reportes-table tr:hover {
+  background-color: rgba(225, 34, 19, 0.07);
+  transition: background-color 0.2s ease;
+}
+
+/* Botón de volver */
+.back-btn {
+  background-color: #e12213;
+  margin-bottom: 15px;
+  color: white;
+  font-weight: bold;
+  padding: 12px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+  background-color: #c11a0f;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(255, 68, 68, 0.3);
+}
+
+/* Mensaje sin datos */
+.no-data {
+  text-align: center;
+  padding: 30px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  color: #6c757d;
+  font-size: 18px;
+  border: 1px dashed #ddd;
+  font-style: italic;
+}
+
+/* Estilos para el gráfico */
+.chart-container {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo para el total por fecha */
+.total-fecha {
+  float: right;
+  background-color: #e12213;
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .fecha-titulo {
+    font-size: 1.2rem;
+  }
+
+  .total-fecha {
+    float: none;
+    display: inline-block;
+    margin-top: 10px;
+    width: fit-content;
+  }
+}

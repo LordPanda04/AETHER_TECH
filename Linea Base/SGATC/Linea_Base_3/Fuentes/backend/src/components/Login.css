@@ -1,0 +1,176 @@
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-image: url('../images/fondometro.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  font-family: 'Arial', sans-serif;
+  animation: backgroundFade 6s ease-in-out infinite alternate;
+}
+
+/* Animación leve al fondo */
+@keyframes backgroundFade {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.05);
+  }
+}
+
+.login-container {
+  background-color: rgba(255, 255, 255, 0.92);
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  width: 380px;
+  text-align: center;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 1.2s ease, slideUp 0.6s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animación deslizante */
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.logo-container {
+  margin-bottom: 1.5rem;
+  animation: logoPulse 3s infinite;
+}
+
+@keyframes logoPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+.metro-logo {
+  height: 160px;
+  width: auto;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.metro-logo:hover {
+  transform: scale(1.05);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  position: relative;
+}
+
+/* Íconos decorativos */
+.form-field::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 38px;
+  width: 20px;
+  height: 20px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.5;
+}
+
+.form-field:nth-child(1)::before {
+  background-image: url("data:image/svg+xml,%3Csvg fill='gray' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 12c2.7 0 5.5 1.3 6 4v1H6v-1c.5-2.7 3.3-4 6-4zm0-2a3 3 0 1 1 0-6 3 3 0 0 1 0 6z'/%3E%3C/svg%3E");
+}
+
+.form-field:nth-child(2)::before {
+  background-image: url("data:image/svg+xml,%3Csvg fill='gray' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6-6V9a6 6 0 0 0-12 0v2H4v10h16V11h-2zm-8-2a4 4 0 0 1 8 0v2H10V9z'/%3E%3C/svg%3E");
+}
+
+.field-label {
+  color: #333;
+  font-weight: bold;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  padding-left: 5px;
+}
+
+.login-input {
+  width: 100%;
+  padding: 13px 15px 13px 40px; /* espacio para el ícono */
+  border: 2px solid #e12213;
+  border-radius: 10px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.login-input:focus {
+  border-color: #c11a0f;
+  box-shadow: 0 0 6px rgba(225, 34, 19, 0.3);
+  outline: none;
+}
+
+.login-input::placeholder {
+  color: #999;
+  transition: color 0.3s;
+}
+
+.login-input:focus::placeholder {
+  color: #c11a0f;
+}
+
+.login-button {
+  background-color: #e12213;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 0.8rem;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.login-button:hover {
+  background-color: #c11a0f;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+}
+
+.login-button:active {
+  transform: scale(0.98);
+}
+
+/* Animación de entrada */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
