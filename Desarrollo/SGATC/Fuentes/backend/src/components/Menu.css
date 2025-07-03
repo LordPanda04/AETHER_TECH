@@ -171,14 +171,14 @@
 }
 
 .update-btn {
-  background-color: #ff9100;
+  background-color: #fb9714;
   margin-bottom: 15px;
 }
 
 .update-btn:hover {
-  background-color: #ff9100;
+  background-color: #be7312;
   transform: translateY(-3px);
-  box-shadow: 0 5px 10px rgba(255, 157, 0, 0.123);
+  box-shadow: 0 5px 10px rgba(255, 157, 0, 0.288);
 }
 
 .logout-btn {
